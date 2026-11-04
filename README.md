@@ -223,9 +223,8 @@ Verificações executadas durante o desenvolvimento:
 - Links locais, identificadores, rótulos e referências de acessibilidade.
 - Respostas HTTPS das quatro páginas, CSS, JavaScript e imagens no Netlify.
 
-A conferência visual em navegador real, a navegação por teclado
-e o comportamento das animações do Bootstrap ainda precisam
-ser verificados manualmente.
+A revisão visual em navegador real foi concluída e aprovada.
+A navegação por teclado permanece no roteiro de conferência manual.
 
 ## 🌿 Colaboração com Git e branches
 
@@ -237,8 +236,9 @@ Repositório: [Lcsf-dev/stockflow](https://github.com/Lcsf-dev/stockflow).
 - **Branch:** mantém uma linha separada de desenvolvimento.
 - **Pull request:** apresenta alterações para revisão antes da integração.
 
-A `main` reúne as versões revisadas. A implementação inicial está
-na branch `feature/initial-structure`.
+A `main` reúne as versões revisadas. A branch `feature/initial-structure`
+foi utilizada na construção inicial do sistema. As próximas alterações
+devem utilizar branches específicas para cada tarefa.
 
 Fluxo da equipe:
 
