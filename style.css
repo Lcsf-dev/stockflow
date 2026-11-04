@@ -1,0 +1,43 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+main {
+    flex: 1;
+}
+
+.cabecalho {
+    background: #102A43;
+}
+
+.marca img {
+    background: white;
+}
+
+.conteudo-principal {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.painel {
+    padding: 1.5rem;
+}
+
+.logomarca-completa {
+    max-width: 100%;
+    width: 620px;
+}
+
+.atalho-conteudo {
+    position: absolute;
+    left: -10000px;
+}
+
+.atalho-conteudo:focus {
+    left: 1rem;
+    z-index: 1100;
+    background: white;
+}

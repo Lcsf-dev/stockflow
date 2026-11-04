@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Conheça o StockFlow, sistema de controle de estoque industrial para pequenas indústrias.">
+    <title>Sobre | StockFlow</title>
+    <link rel="icon" type="image/png" href="images/symbol-stockflow.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <a class="atalho-conteudo" href="#conteudo">Ir para o conteúdo</a>
+    <header class="cabecalho">
+        <nav class="navbar navbar-expand-md" data-bs-theme="dark" aria-label="Navegação principal">
+            <div class="container">
+                <a class="navbar-brand marca" href="index.html" aria-label="StockFlow: página inicial">
+                    <img src="images/symbol-stockflow.png" alt="" width="44" height="44">
+                    <span>Stock<span class="marca-destaque">Flow</span></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal" aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir ou fechar menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="menu-principal">
+                    <ul class="navbar-nav ms-auto gap-md-2">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Visão geral</a></li>
+                        <li class="nav-item"><a class="nav-link" href="materials.html">Materiais</a></li>
+                        <li class="nav-item"><a class="nav-link" href="movements.html">Movimentações</a></li>
+                        <li class="nav-item"><a class="nav-link" href="about.html">Sobre</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="container conteudo-principal" id="conteudo" tabindex="-1">
+        <div class="mensagem mb-4" id="mensagem-sistema" role="alert" hidden></div>
+        <noscript><p class="mensagem mensagem-erro">Ative o JavaScript para utilizar os formulários e consultar o estoque. O menu em telas pequenas também depende de JavaScript.</p></noscript>
+        <section class="painel mb-4" aria-labelledby="titulo-pagina">
+            <img class="logomarca-completa" src="images/logo-stockflow.png" alt="StockFlow — Controle de Estoque Industrial. Sua indústria em movimento, seu estoque sob controle.">
+            <p class="identificador">Organização para sua indústria</p>
+            <h1 id="titulo-pagina">Conheça o StockFlow</h1>
+            <p class="slogan">Sua indústria em movimento, seu estoque sob controle.</p>
+            <p class="mb-0">O StockFlow ajuda pequenas indústrias a organizar materiais, consultar saldos, registrar entradas e saídas e identificar necessidades de reposição.</p>
+        </section>
+        <section class="row g-4 mb-4" aria-label="Benefícios do StockFlow">
+            <div class="col-md-4">
+                <article class="painel h-100">
+                    <p class="numero-secao" aria-hidden="true">01</p>
+                    <h2 class="h5">Materiais organizados</h2>
+                    <p class="mb-0">Código, categoria e unidade de medida reunidos em um cadastro fácil de consultar.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="painel h-100">
+                    <p class="numero-secao" aria-hidden="true">02</p>
+                    <h2 class="h5">Movimentos registrados</h2>
+                    <p class="mb-0">Entradas e saídas com data, quantidade e observações para acompanhar o estoque.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="painel h-100">
+                    <p class="numero-secao" aria-hidden="true">03</p>
+                    <h2 class="h5">Reposição em foco</h2>
+                    <p class="mb-0">Situações de estoque que ajudam a identificar materiais esgotados ou com saldo baixo.</p>
+                </article>
+            </div>
+        </section>
+        <section class="painel" aria-labelledby="titulo-exemplos">
+            <h2 class="h4" id="titulo-exemplos">Do insumo à embalagem</h2>
+            <p class="mb-0">Controle matérias-primas, componentes, embalagens e materiais de consumo, como chapas de aço, parafusos, caixas e lubrificantes. Esses exemplos não são cadastrados automaticamente no sistema.</p>
+        </section>
+    </main>
+    <footer class="rodape">
+        <div class="container rodape-conteudo">
+            <p class="mb-0"><strong>StockFlow</strong> · Controle de Estoque Industrial</p>
+            <p class="small mb-0">Dados neste navegador, sem sincronização entre computadores.</p>
+        </div>
+    </footer>
+</body>
+</html>
