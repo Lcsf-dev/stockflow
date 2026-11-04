@@ -71,7 +71,7 @@
         </section>
         <section class="painel mb-4" id="cadastro" aria-labelledby="titulo-cadastro">
             <h2 class="h4" id="titulo-cadastro">Cadastrar material</h2>
-            <p class="texto-secundario">Todos os campos são obrigatórios. O saldo inicial é zero e muda somente pelas movimentações.</p>
+            <p class="texto-secundario">Todos os campos são obrigatórios. Após o cadastro, o saldo muda somente pelas movimentações.</p>
             <form id="formulario-material" novalidate>
                 <fieldset id="campos-material">
                     <legend class="visually-hidden">Dados cadastrais do material</legend>
@@ -81,17 +81,25 @@
                             <input class="form-control" id="codigo-material" name="codigo" type="text" maxlength="40" required>
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label" for="nome-material">Nome</label>
+                            <label class="form-label" for="nome-material">Nome do material</label>
                             <input class="form-control" id="nome-material" name="nome" type="text" maxlength="120" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="categoria-material">Categoria</label>
                             <select class="form-select" id="categoria-material" name="categoria" required>
                                 <option value="">Selecione a categoria</option>
-                                <option value="materia-prima">Matéria-prima</option>
-                                <option value="componentes">Componentes</option>
+                                <option value="materia-prima">Matérias-primas</option>
+                                <option value="componentes">Peças e componentes</option>
+                                <option value="ferramentas">Ferramentas e acessórios</option>
+                                <option value="seguranca">EPI e segurança</option>
+                                <option value="eletricos">Materiais elétricos</option>
+                                <option value="hidraulicos">Materiais hidráulicos e pneumáticos</option>
+                                <option value="limpeza">Limpeza e higiene</option>
+                                <option value="manutencao">Lubrificantes e produtos de manutenção</option>
                                 <option value="embalagens">Embalagens</option>
+                                <option value="escritorio">Materiais de escritório</option>
                                 <option value="consumo">Materiais de consumo</option>
+                                <option value="outros">Outros</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -106,9 +114,14 @@
                             <p class="form-text" id="ajuda-unidade">A unidade fica bloqueada após a primeira movimentação.</p>
                         </div>
                         <div class="col-md-4">
+                            <label class="form-label" for="inicial-material">Quantidade inicial</label>
+                            <input class="form-control" id="inicial-material" name="quantidadeInicial" type="text" inputmode="decimal" maxlength="24" value="0" aria-describedby="ajuda-inicial" required>
+                            <p class="form-text" id="ajuda-inicial">Quanto existe atualmente no estoque. Zero ou maior; un: inteiros; kg, m e L: até três casas decimais. Disponível somente no cadastro.</p>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label" for="minimo-material">Estoque mínimo</label>
                             <input class="form-control" id="minimo-material" name="estoqueMinimo" type="text" inputmode="decimal" maxlength="24" aria-describedby="ajuda-minimo" required>
-                            <p class="form-text" id="ajuda-minimo">Zero ou maior. Unidades: inteiros. kg, m e L: até três casas decimais.</p>
+                            <p class="form-text" id="ajuda-minimo">Limite utilizado para indicar necessidade de reposição. Zero ou maior; un: inteiros; kg, m e L: até três casas decimais.</p>
                         </div>
                     </div>
                     <p class="mensagem mensagem-erro mt-3" id="erro-material" role="alert" hidden></p>

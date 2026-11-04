@@ -2,14 +2,21 @@
 
 const chaveArmazenamento = "stockflow.dados";
 const categorias = {
-    "materia-prima": "Matéria-prima",
-    "componentes": "Componentes",
+    "materia-prima": "Matérias-primas",
+    "componentes": "Peças e componentes",
+    "ferramentas": "Ferramentas e acessórios",
+    "seguranca": "EPI e segurança",
+    "eletricos": "Materiais elétricos",
+    "hidraulicos": "Materiais hidráulicos e pneumáticos",
+    "limpeza": "Limpeza e higiene",
+    "manutencao": "Lubrificantes e produtos de manutenção",
     "embalagens": "Embalagens",
-    "consumo": "Materiais de consumo"
+    "escritorio": "Materiais de escritório",
+    "consumo": "Materiais de consumo",
+    "outros": "Outros"
 };
 const unidades = { "un": "un", "kg": "kg", "m": "m", "l": "L" };
 let dados = null;
-let versaoLida = null;
 let armazenamentoDisponivel = false;
 let materialEmEdicao = null;
 
@@ -33,6 +40,7 @@ function possuiMovimentacoes(identificador, movimentacoes) {
     return false;
 }
 
+// Recebe o ID e o histórico; soma entradas e desconta saídas, devolvendo milésimos.
 function calcularSaldo(identificador, movimentacoes) {
     let saldoMil = 0;
 
@@ -51,73 +59,36 @@ function calcularSaldo(identificador, movimentacoes) {
     return saldoMil;
 }
 
-// Valida o arquivo inteiro antes de utilizar ou substituir os dados existentes.
+// Recebe o JSON lido e verifica o formato básico, sem recalcular todo o histórico.
 function validarDados(conteudo) {
     if (!conteudo || conteudo.versao !== 1 ||
         !Array.isArray(conteudo.materiais) || !Array.isArray(conteudo.movimentacoes)) {
         throw new Error("Formato de armazenamento não reconhecido.");
     }
 
-    const identificadores = [];
-    const codigos = [];
-
     for (let indice = 0; indice < conteudo.materiais.length; indice++) {
         const material = conteudo.materiais[indice];
 
         if (!material || !Number.isSafeInteger(material.id) || material.id <= 0 ||
-            identificadores.includes(material.id) ||
-            typeof material.codigo !== "string" || material.codigo.trim() === "" ||
-            material.codigo.length > 40 ||
-            typeof material.nome !== "string" || material.nome.trim() === "" ||
-            material.nome.length > 120 ||
-            !Object.hasOwn(categorias, material.categoria) ||
-            !Object.hasOwn(unidades, material.unidade) ||
+            typeof material.codigo !== "string" || typeof material.nome !== "string" ||
+            !Object.hasOwn(categorias, material.categoria) || !Object.hasOwn(unidades, material.unidade) ||
             !Number.isSafeInteger(material.estoqueMinimoMil) || material.estoqueMinimoMil < 0) {
-            throw new Error("Cadastro armazenado inválido.");
+            throw new Error("Formato de material não reconhecido.");
         }
-
-        const codigoNormalizado = material.codigo.trim().toLocaleUpperCase("pt-BR");
-
-        if (codigos.includes(codigoNormalizado) ||
-            (material.unidade === "un" && material.estoqueMinimoMil % 1000 !== 0)) {
-            throw new Error("Código duplicado ou estoque mínimo inválido.");
-        }
-
-        identificadores.push(material.id);
-        codigos.push(codigoNormalizado);
     }
-
-    const identificadoresMovimentacoes = [];
-    const movimentacoesValidadas = [];
 
     for (let indice = 0; indice < conteudo.movimentacoes.length; indice++) {
         const movimentacao = conteudo.movimentacoes[indice];
 
         if (!movimentacao || !Number.isSafeInteger(movimentacao.id) || movimentacao.id <= 0 ||
-            identificadoresMovimentacoes.includes(movimentacao.id) ||
-            !Number.isSafeInteger(movimentacao.materialId) ||
+            !localizarMaterial(movimentacao.materialId, conteudo.materiais) ||
             (movimentacao.tipo !== "entrada" && movimentacao.tipo !== "saida") ||
             !Number.isSafeInteger(movimentacao.quantidadeMil) || movimentacao.quantidadeMil <= 0 ||
-            typeof movimentacao.observacao !== "string" || movimentacao.observacao.length > 500 ||
-            typeof movimentacao.data !== "string" || Number.isNaN(Date.parse(movimentacao.data))) {
-            throw new Error("Movimentação armazenada inválida.");
+            !Object.hasOwn(unidades, movimentacao.unidade) ||
+            typeof movimentacao.observacao !== "string" || typeof movimentacao.data !== "string" ||
+            Number.isNaN(Date.parse(movimentacao.data))) {
+            throw new Error("Formato de movimentação não reconhecido.");
         }
-
-        const material = localizarMaterial(movimentacao.materialId, conteudo.materiais);
-
-        if (!material || movimentacao.unidade !== material.unidade ||
-            (material.unidade === "un" && movimentacao.quantidadeMil % 1000 !== 0)) {
-            throw new Error("Material ou unidade da movimentação inválidos.");
-        }
-
-        movimentacoesValidadas.push(movimentacao);
-        const saldoMil = calcularSaldo(material.id, movimentacoesValidadas);
-
-        if (!Number.isSafeInteger(saldoMil) || saldoMil < 0) {
-            throw new Error("O histórico contém um saldo inválido.");
-        }
-
-        identificadoresMovimentacoes.push(movimentacao.id);
     }
 }
 
@@ -148,14 +119,15 @@ function bloquearFormularios() {
     }
 }
 
+// Lê o armazenamento; se houver falha, preserva os registros e bloqueia gravações.
 function carregarDados() {
     try {
-        versaoLida = localStorage.getItem(chaveArmazenamento);
+        const conteudoSalvo = localStorage.getItem(chaveArmazenamento);
 
-        if (versaoLida === null) {
+        if (conteudoSalvo === null) {
             dados = { versao: 1, materiais: [], movimentacoes: [] };
         } else {
-            const conteudo = JSON.parse(versaoLida);
+            const conteudo = JSON.parse(conteudoSalvo);
             validarDados(conteudo);
             dados = conteudo;
         }
@@ -177,19 +149,9 @@ function salvarDados(novosDados) {
     }
 
     try {
-        const versaoAtual = localStorage.getItem(chaveArmazenamento);
-
-        if (versaoAtual !== versaoLida) {
-            bloquearFormularios();
-            mostrarMensagem("Os dados foram alterados em outra aba. Recarregue esta página para continuar sem sobrescrever os registros.", "erro");
-            return false;
-        }
-
-        validarDados(novosDados);
         const conteudo = JSON.stringify(novosDados);
         localStorage.setItem(chaveArmazenamento, conteudo);
         dados = novosDados;
-        versaoLida = conteudo;
         return true;
     } catch (erro) {
         mostrarMensagem("Não foi possível salvar. Nenhuma alteração foi confirmada. Verifique o espaço e a permissão de armazenamento do navegador e tente novamente.", "erro");
@@ -198,7 +160,8 @@ function salvarDados(novosDados) {
     }
 }
 
-// Quantidades são inteiros em milésimos, evitando erros como 0,1 + 0,2.
+// Armazenamos quantidades em milésimos: 1,5 kg vira 1500. Na exibição, convertemos de volta.
+// Recebe o texto e a unidade, valida as casas decimais e devolve um inteiro seguro.
 function converterParaMilesimos(valor, unidade, permitirZero) {
     const texto = valor.trim();
 
@@ -234,16 +197,17 @@ function converterParaMilesimos(valor, unidade, permitirZero) {
     return quantidadeMil;
 }
 
+// Recebe milésimos e devolve um texto decimal sem separador de milhar para edição.
 function quantidadeParaCampo(quantidadeMil) {
-    const parteInteira = Math.floor(quantidadeMil / 1000);
-    const resto = quantidadeMil % 1000;
+    const texto = String(quantidadeMil).padStart(4, "0");
+    const parteInteira = texto.slice(0, -3);
+    const parteDecimal = texto.slice(-3).replace(/0+$/, "");
 
-    if (resto === 0) {
-        return String(parteInteira);
+    if (parteDecimal === "") {
+        return parteInteira;
     }
 
-    const parteDecimal = String(resto).padStart(3, "0").replace(/0+$/, "");
-    return String(parteInteira) + "," + parteDecimal;
+    return parteInteira + "," + parteDecimal;
 }
 
 function formatarQuantidade(quantidadeMil) {
@@ -330,9 +294,14 @@ function informarErroFormulario(identificadorMensagem, texto, campo) {
     }
 }
 
-// Cadastro, pesquisa e edição de materiais
+// Materiais: cadastro, pesquisa e edição
 
-function prepararMaterial(codigo, nome, categoria, unidade, minimo, identificador) {
+// Recebe os campos do cadastro e o ID em edição; devolve o material validado.
+function prepararMaterial(cadastro, identificador) {
+    const codigo = cadastro.codigo;
+    const nome = cadastro.nome;
+    const categoria = cadastro.categoria;
+    const unidade = cadastro.unidade;
     const codigoNormalizado = codigo.trim().toLocaleUpperCase("pt-BR");
     const nomeNormalizado = nome.trim();
 
@@ -380,7 +349,7 @@ function prepararMaterial(codigo, nome, categoria, unidade, minimo, identificado
         nome: nomeNormalizado,
         categoria: categoria,
         unidade: unidade,
-        estoqueMinimoMil: converterParaMilesimos(minimo, unidade, true)
+        estoqueMinimoMil: converterParaMilesimos(cadastro.minimo, unidade, true)
     };
 }
 
@@ -394,6 +363,7 @@ function limparFormularioMaterial() {
     formulario.reset();
     materialEmEdicao = null;
     document.getElementById("unidade-material").disabled = false;
+    document.getElementById("inicial-material").disabled = false;
     document.getElementById("titulo-cadastro").textContent = "Cadastrar material";
     document.getElementById("salvar-material").textContent = "Cadastrar material";
     document.getElementById("cancelar-edicao").hidden = true;
@@ -413,6 +383,7 @@ function iniciarEdicaoMaterial(identificador) {
 
     limparFormularioMaterial();
     materialEmEdicao = identificador;
+    document.getElementById("inicial-material").disabled = true;
     document.getElementById("codigo-material").value = material.codigo;
     document.getElementById("nome-material").value = material.nome;
     document.getElementById("categoria-material").value = material.categoria;
@@ -425,6 +396,7 @@ function iniciarEdicaoMaterial(identificador) {
     document.getElementById("codigo-material").focus();
 }
 
+// Recebe o envio do formulário, valida os campos e confirma somente após salvar.
 function cadastrarMaterial(evento) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
@@ -439,53 +411,71 @@ function cadastrarMaterial(evento) {
     const campos = formulario.querySelectorAll("input, select");
 
     for (let indice = 0; indice < campos.length; indice++) {
-        if (campos[indice].value.trim() === "") {
+        if (!campos[indice].disabled && campos[indice].value.trim() === "") {
             informarErroFormulario("erro-material", "Preencha todos os campos obrigatórios.", campos[indice]);
             return;
         }
     }
 
-    let material;
-
     try {
-        material = prepararMaterial(
-            document.getElementById("codigo-material").value,
-            document.getElementById("nome-material").value,
-            document.getElementById("categoria-material").value,
-            document.getElementById("unidade-material").value,
-            document.getElementById("minimo-material").value,
-            materialEmEdicao
-        );
-    } catch (erro) {
-        informarErroFormulario("erro-material", erro.message);
-        return;
-    }
+        const cadastro = {
+            codigo: document.getElementById("codigo-material").value,
+            nome: document.getElementById("nome-material").value,
+            categoria: document.getElementById("categoria-material").value,
+            unidade: document.getElementById("unidade-material").value,
+            minimo: document.getElementById("minimo-material").value
+        };
+        const material = prepararMaterial(cadastro, materialEmEdicao);
+        let quantidadeInicialMil = 0;
 
-    const novosMateriais = dados.materiais.slice();
-    let textoSucesso = "Material cadastrado. Saldo inicial: zero.";
-
-    if (materialEmEdicao === null) {
-        novosMateriais.push(material);
-    } else {
-        for (let indice = 0; indice < novosMateriais.length; indice++) {
-            if (novosMateriais[indice].id === materialEmEdicao) {
-                novosMateriais[indice] = material;
-            }
+        if (materialEmEdicao === null) {
+            quantidadeInicialMil = converterParaMilesimos(
+                document.getElementById("inicial-material").value, material.unidade, true
+            );
         }
 
-        textoSucesso = "Dados do material atualizados. O histórico foi preservado.";
-    }
-
-    const novosDados = { versao: 1, materiais: novosMateriais, movimentacoes: dados.movimentacoes };
-
-    if (salvarDados(novosDados)) {
-        limparFormularioMaterial();
-        renderizarMateriais();
-        renderizarVisaoGeral();
-        mostrarMensagem(textoSucesso, "sucesso");
+        if (salvarMaterial(material, quantidadeInicialMil)) {
+            limparFormularioMaterial();
+            renderizarMateriais();
+            renderizarVisaoGeral();
+            mostrarMensagem("Material salvo. O saldo e o histórico estão atualizados.", "sucesso");
+        }
+    } catch (erro) {
+        informarErroFormulario("erro-material", erro.message);
     }
 }
 
+// Recebe o material validado e a quantidade inicial; salva cadastro e entrada juntos.
+function salvarMaterial(material, quantidadeInicialMil) {
+    const novosMateriais = dados.materiais.slice();
+    const novasMovimentacoes = dados.movimentacoes.slice();
+
+    if (materialEmEdicao === null) {
+        novosMateriais.push(material);
+
+        if (quantidadeInicialMil > 0) {
+            novasMovimentacoes.push({
+                id: gerarIdentificador(novasMovimentacoes),
+                materialId: material.id,
+                tipo: "entrada",
+                quantidadeMil: quantidadeInicialMil,
+                unidade: material.unidade,
+                data: new Date().toISOString(),
+                observacao: "Estoque inicial"
+            });
+        }
+    } else {
+        for (let indice = 0; indice < novosMateriais.length; indice++) {
+            if (novosMateriais[indice].id === material.id) {
+                novosMateriais[indice] = material;
+            }
+        }
+    }
+
+    return salvarDados({ versao: 1, materiais: novosMateriais, movimentacoes: novasMovimentacoes });
+}
+
+// Lê a pesquisa e os dados e monta a tabela usando textos seguros.
 function renderizarMateriais() {
     const lista = document.getElementById("lista-materiais");
 
@@ -552,8 +542,9 @@ function renderizarMateriais() {
     }
 }
 
-// Entradas, saídas e histórico
+// Movimentações: entradas, saídas e histórico
 
+// Recebe os dados da operação; valida quantidade e saldo e devolve a movimentação.
 function prepararMovimentacao(identificador, tipo, quantidade, observacao) {
     const material = localizarMaterial(identificador, dados.materiais);
 
@@ -650,6 +641,7 @@ function preencherMateriaisMovimentacao() {
     }
 }
 
+// Recebe o envio do formulário e grava uma operação válida antes de atualizar a tela.
 function registrarMovimentacao(evento) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
@@ -696,6 +688,7 @@ function registrarMovimentacao(evento) {
     }
 }
 
+// Mostra o histórico salvo do registro mais recente ao mais antigo.
 function renderizarMovimentacoes() {
     const lista = document.getElementById("lista-movimentacoes");
 
@@ -752,6 +745,7 @@ function renderizarMovimentacoes() {
 
 // Indicadores e alertas de reposição
 
+// Conta materiais por situação, sem somar quantidades de unidades diferentes.
 function resumirEstoque() {
     const resumo = { total: dados.materiais.length, baixos: 0, esgotados: 0 };
 
@@ -802,8 +796,6 @@ const formularioMaterial = document.getElementById("formulario-material");
 
 if (formularioMaterial) {
     formularioMaterial.addEventListener("submit", cadastrarMaterial);
-    document.getElementById("cancelar-edicao").addEventListener("click", limparFormularioMaterial);
-    document.getElementById("pesquisa-material").addEventListener("input", renderizarMateriais);
     renderizarMateriais();
 }
 
@@ -811,9 +803,24 @@ const formularioMovimentacao = document.getElementById("formulario-movimentacao"
 
 if (formularioMovimentacao) {
     formularioMovimentacao.addEventListener("submit", registrarMovimentacao);
-    document.getElementById("material-movimentacao").addEventListener("change", atualizarSaldoSelecionado);
     preencherMateriaisMovimentacao();
     renderizarMovimentacoes();
+}
+
+const botaoCancelar = document.getElementById("cancelar-edicao");
+const campoPesquisa = document.getElementById("pesquisa-material");
+const seletorMaterial = document.getElementById("material-movimentacao");
+
+if (botaoCancelar) {
+    botaoCancelar.addEventListener("click", limparFormularioMaterial);
+}
+
+if (campoPesquisa) {
+    campoPesquisa.addEventListener("input", renderizarMateriais);
+}
+
+if (seletorMaterial) {
+    seletorMaterial.addEventListener("change", atualizarSaldoSelecionado);
 }
 
 const carrossel = document.getElementById("carrossel-recursos");
@@ -821,13 +828,10 @@ const carrossel = document.getElementById("carrossel-recursos");
 if (carrossel && typeof bootstrap !== "undefined") {
     new bootstrap.Carousel(carrossel, { interval: false, ride: false });
     carrossel.addEventListener("slid.bs.carousel", function (evento) {
-        document.getElementById("status-carrossel").textContent = (evento.to + 1) + " de 3";
+        const status = document.getElementById("status-carrossel");
+
+        if (status) {
+            status.textContent = (evento.to + 1) + " de 3";
+        }
     });
 }
-
-window.addEventListener("storage", function (evento) {
-    if (evento.key === chaveArmazenamento || evento.key === null) {
-        bloquearFormularios();
-        mostrarMensagem("O armazenamento foi alterado em outra aba. Recarregue esta página antes de continuar.", "erro");
-    }
-});
