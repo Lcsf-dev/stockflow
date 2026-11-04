@@ -208,6 +208,106 @@ textarea:focus-visible,
     font-weight: 700;
 }
 
+/* Mensagens e situações combinam texto com cor. */
+.mensagem {
+    padding: 1rem 1.25rem;
+    border: 1px solid currentColor;
+    border-radius: 0.6rem;
+    background-color: var(--cor-superficie);
+    overflow-wrap: anywhere;
+}
+
+.mensagem-erro {
+    color: var(--cor-erro);
+}
+
+.mensagem-sucesso {
+    color: var(--cor-botao);
+}
+
+.cabecalho-painel {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.campo-pesquisa {
+    width: 100%;
+    max-width: 340px;
+}
+
+.estado-vazio {
+    margin: 0;
+    padding: 2rem 1rem;
+    background-color: var(--cor-fundo);
+    border-radius: 0.65rem;
+    text-align: center;
+}
+
+.table {
+    --bs-table-color: var(--cor-texto);
+    --bs-table-bg: var(--cor-superficie);
+    --bs-table-border-color: var(--cor-fundo);
+    min-width: 760px;
+}
+
+.table thead th {
+    padding: 0.9rem;
+    background-color: var(--cor-fundo);
+    color: var(--cor-primaria);
+    white-space: nowrap;
+    font-size: 0.85rem;
+}
+
+.table td {
+    padding: 1rem 0.9rem;
+    max-width: 300px;
+    overflow-wrap: anywhere;
+}
+
+.situacao {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid currentColor;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.situacao-disponivel {
+    color: var(--cor-botao);
+}
+
+.situacao-baixo {
+    color: var(--cor-alerta);
+}
+
+.situacao-esgotado {
+    color: var(--cor-erro);
+}
+
+.form-label {
+    color: var(--cor-primaria);
+    font-weight: 600;
+}
+
+.form-control,
+.form-select {
+    padding: 0.65rem 0.8rem;
+    color: var(--cor-texto);
+    border-color: color-mix(in srgb, var(--cor-texto) 40%, var(--cor-superficie));
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--cor-botao);
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--cor-botao) 18%, transparent);
+}
+
 .rodape {
     padding: 1.5rem 0;
     background-color: var(--cor-superficie);

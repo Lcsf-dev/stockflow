@@ -42,9 +42,86 @@
             <h1 id="titulo-pagina">Materiais</h1>
             <p>Cadastre e consulte os materiais utilizados na sua indústria.</p>
         </div>
-        <section class="painel" aria-labelledby="titulo-cadastro">
-            <h2 class="h4" id="titulo-cadastro">Cadastro de materiais</h2>
-            <p class="mb-0">O formulário será disponibilizado nesta área.</p>
+        <section class="painel mb-4" aria-labelledby="titulo-cadastro">
+            <h2 class="h4" id="titulo-cadastro">Cadastrar material</h2>
+            <p class="texto-secundario">Todos os campos são obrigatórios. O saldo inicial é zero e muda somente pelas movimentações.</p>
+            <form id="formulario-material" novalidate>
+                <fieldset id="campos-material">
+                    <legend class="visually-hidden">Dados cadastrais do material</legend>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="codigo-material">Código</label>
+                            <input class="form-control" id="codigo-material" name="codigo" type="text" maxlength="40" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="nome-material">Nome</label>
+                            <input class="form-control" id="nome-material" name="nome" type="text" maxlength="120" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="categoria-material">Categoria</label>
+                            <select class="form-select" id="categoria-material" name="categoria" required>
+                                <option value="">Selecione a categoria</option>
+                                <option value="materia-prima">Matéria-prima</option>
+                                <option value="componentes">Componentes</option>
+                                <option value="embalagens">Embalagens</option>
+                                <option value="consumo">Materiais de consumo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="unidade-material">Unidade de medida</label>
+                            <select class="form-select" id="unidade-material" name="unidade" aria-describedby="ajuda-unidade" required>
+                                <option value="">Selecione a unidade</option>
+                                <option value="un">Unidade (un)</option>
+                                <option value="kg">Quilograma (kg)</option>
+                                <option value="m">Metro (m)</option>
+                                <option value="l">Litro (L)</option>
+                            </select>
+                            <p class="form-text" id="ajuda-unidade">A unidade fica bloqueada após a primeira movimentação.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="minimo-material">Estoque mínimo</label>
+                            <input class="form-control" id="minimo-material" name="estoqueMinimo" type="text" inputmode="decimal" maxlength="24" aria-describedby="ajuda-minimo" required>
+                            <p class="form-text" id="ajuda-minimo">Zero ou maior. Unidades: inteiros. kg, m e L: até três casas decimais.</p>
+                        </div>
+                    </div>
+                    <p class="mensagem mensagem-erro mt-3" id="erro-material" role="alert" hidden></p>
+                    <div class="d-flex gap-2 flex-wrap mt-3">
+                        <button class="btn btn-primary" id="salvar-material" type="submit">Cadastrar material</button>
+                        <button class="btn btn-outline-primary" id="cancelar-edicao" type="button" hidden>Cancelar edição</button>
+                    </div>
+                </fieldset>
+            </form>
+        </section>
+        <section class="painel" aria-labelledby="titulo-lista">
+            <div class="cabecalho-painel">
+                <div>
+                    <h2 class="h4" id="titulo-lista">Materiais cadastrados</h2>
+                    <p class="texto-secundario mb-0" id="resumo-materiais" role="status"></p>
+                </div>
+                <div class="campo-pesquisa">
+                    <label class="form-label" for="pesquisa-material">Pesquisar por nome ou código</label>
+                    <input class="form-control" id="pesquisa-material" type="search" placeholder="Digite para pesquisar" autocomplete="off">
+                </div>
+            </div>
+            <p class="estado-vazio" id="vazio-materiais">Nenhum material cadastrado. Utilize o formulário para começar.</p>
+            <div class="table-responsive" id="tabela-materiais" role="region" aria-label="Materiais cadastrados; role horizontalmente em telas pequenas" tabindex="0" hidden>
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Cadastro de materiais com saldo, estoque mínimo e situação.</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Material</th>
+                            <th scope="col">Categoria</th>
+                            <th scope="col">Unidade</th>
+                            <th scope="col" class="text-end">Mínimo</th>
+                            <th scope="col" class="text-end">Saldo</th>
+                            <th scope="col">Situação</th>
+                            <th scope="col">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-materiais"></tbody>
+                </table>
+            </div>
         </section>
     </main>
     <footer class="rodape">
