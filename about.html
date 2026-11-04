@@ -67,6 +67,39 @@
                 </article>
             </div>
         </section>
+        <section class="painel mb-4" aria-labelledby="titulo-recursos">
+            <h2 class="h4 mb-3" id="titulo-recursos">Controle em cada etapa</h2>
+            <div class="carousel slide" id="carrossel-recursos" role="region" aria-roledescription="carrossel" aria-label="Recursos do StockFlow">
+                <div class="carousel-inner">
+                    <div class="carousel-item active" role="group" aria-roledescription="slide" aria-label="1 de 3: cadastro">
+                        <div class="slide-recurso">
+                            <p class="identificador">01 · Cadastro</p>
+                            <h3>Um lugar para cada material.</h3>
+                            <p>Organize código, nome, categoria, unidade de medida e estoque mínimo. Pesquise e edite sem perder o histórico.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" role="group" aria-roledescription="slide" aria-label="2 de 3: movimentações">
+                        <div class="slide-recurso">
+                            <p class="identificador">02 · Movimentações</p>
+                            <h3>Saiba o que entra e o que sai.</h3>
+                            <p>Registre quantidades com data e hora automáticas. Saídas acima do saldo são bloqueadas para manter o estoque consistente.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" role="group" aria-roledescription="slide" aria-label="3 de 3: alertas">
+                        <div class="slide-recurso">
+                            <p class="identificador">03 · Alertas</p>
+                            <h3>Reposição no momento certo.</h3>
+                            <p>Identifique materiais esgotados ou com estoque baixo na visão geral. Cada situação combina texto e cor para facilitar a leitura.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="controles-carrossel">
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-target="#carrossel-recursos" data-bs-slide="prev">Anterior</button>
+                    <p class="small mb-0" id="status-carrossel" aria-live="polite" aria-atomic="true">1 de 3</p>
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-target="#carrossel-recursos" data-bs-slide="next">Próximo</button>
+                </div>
+            </div>
+        </section>
         <section class="painel" aria-labelledby="titulo-exemplos">
             <h2 class="h4" id="titulo-exemplos">Do insumo à embalagem</h2>
             <p class="mb-0">Controle matérias-primas, componentes, embalagens e materiais de consumo, como chapas de aço, parafusos, caixas e lubrificantes. Esses exemplos não são cadastrados automaticamente no sistema.</p>

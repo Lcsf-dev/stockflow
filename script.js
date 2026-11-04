@@ -767,10 +767,83 @@ function renderizarMovimentacoes() {
     }
 }
 
+// Indicadores e alertas de reposição
+
+function resumirEstoque() {
+    const resumo = { total: dados.materiais.length, baixos: 0, esgotados: 0, reposicao: [] };
+
+    for (let indice = 0; indice < dados.materiais.length; indice++) {
+        const material = dados.materiais[indice];
+        const saldoMil = calcularSaldo(material.id, dados.movimentacoes);
+
+        if (saldoMil === 0) {
+            resumo.esgotados++;
+            resumo.reposicao.push(material);
+        } else if (saldoMil <= material.estoqueMinimoMil) {
+            resumo.baixos++;
+            resumo.reposicao.push(material);
+        }
+    }
+
+    return resumo;
+}
+
+function renderizarVisaoGeral() {
+    const total = document.getElementById("total-materiais");
+
+    if (!total) {
+        return;
+    }
+
+    const baixos = document.getElementById("total-baixos");
+    const esgotados = document.getElementById("total-esgotados");
+    const lista = document.getElementById("lista-reposicao");
+    const vazio = document.getElementById("vazio-reposicao");
+    const tabela = document.getElementById("tabela-reposicao");
+    lista.replaceChildren();
+
+    if (!dados) {
+        total.textContent = "—";
+        baixos.textContent = "—";
+        esgotados.textContent = "—";
+        tabela.hidden = true;
+        vazio.hidden = false;
+        vazio.textContent = "Não foi possível consultar o estoque. Verifique a mensagem acima.";
+        return;
+    }
+
+    const resumo = resumirEstoque();
+    total.textContent = String(resumo.total);
+    baixos.textContent = String(resumo.baixos);
+    esgotados.textContent = String(resumo.esgotados);
+    tabela.hidden = resumo.reposicao.length === 0;
+    vazio.hidden = resumo.reposicao.length !== 0;
+
+    if (resumo.total === 0) {
+        vazio.textContent = "Nenhum material cadastrado. Cadastre seu primeiro material para começar.";
+    } else {
+        vazio.textContent = "Tudo em dia. Nenhum material precisa de reposição.";
+    }
+
+    for (let indice = 0; indice < resumo.reposicao.length; indice++) {
+        const material = resumo.reposicao[indice];
+        const saldoMil = calcularSaldo(material.id, dados.movimentacoes);
+        const linha = document.createElement("tr");
+        criarCelula(linha, material.codigo);
+        criarCelula(linha, material.nome);
+        criarCelula(linha, formatarQuantidade(saldoMil), "text-end");
+        criarCelula(linha, formatarQuantidade(material.estoqueMinimoMil), "text-end");
+        criarCelula(linha, unidades[material.unidade]);
+        criarSituacao(linha, saldoMil, material.estoqueMinimoMil);
+        lista.appendChild(linha);
+    }
+}
+
 // Inicialização compartilhada: cada página utiliza somente os elementos existentes.
 
 destacarPaginaAtual();
 carregarDados();
+renderizarVisaoGeral();
 
 const formularioMaterial = document.getElementById("formulario-material");
 
@@ -788,6 +861,15 @@ if (formularioMovimentacao) {
     document.getElementById("material-movimentacao").addEventListener("change", atualizarSaldoSelecionado);
     preencherMateriaisMovimentacao();
     renderizarMovimentacoes();
+}
+
+const carrossel = document.getElementById("carrossel-recursos");
+
+if (carrossel && typeof bootstrap !== "undefined") {
+    new bootstrap.Carousel(carrossel, { interval: false, ride: false });
+    carrossel.addEventListener("slid.bs.carousel", function (evento) {
+        document.getElementById("status-carrossel").textContent = (evento.to + 1) + " de 3";
+    });
 }
 
 window.addEventListener("storage", function (evento) {

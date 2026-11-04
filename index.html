@@ -48,9 +48,54 @@
             </div>
             <img class="simbolo-apresentacao" src="images/symbol-stockflow.png" alt="" width="156" height="156">
         </section>
+        <section class="row g-4 mb-4" aria-label="Indicadores de materiais">
+            <div class="col-md-4">
+                <article class="painel indicador h-100">
+                    <h2 class="h6">Materiais cadastrados</h2>
+                    <p class="valor-indicador" id="total-materiais">0</p>
+                    <p class="small mb-0">Todos os materiais do cadastro.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="painel indicador indicador-alerta h-100">
+                    <h2 class="h6">Estoque baixo</h2>
+                    <p class="valor-indicador" id="total-baixos">0</p>
+                    <p class="small mb-0">Saldo positivo até o estoque mínimo.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="painel indicador indicador-erro h-100">
+                    <h2 class="h6">Esgotados</h2>
+                    <p class="valor-indicador" id="total-esgotados">0</p>
+                    <p class="small mb-0">Materiais com saldo igual a zero.</p>
+                </article>
+            </div>
+        </section>
         <section class="painel" aria-labelledby="titulo-acompanhamento">
-            <h2 class="h4" id="titulo-acompanhamento">Acompanhamento do estoque</h2>
-            <p class="mb-0">Os indicadores serão conectados aos cadastros e às movimentações do sistema.</p>
+            <div class="cabecalho-painel">
+                <div>
+                    <h2 class="h4" id="titulo-acompanhamento">Atenção à reposição</h2>
+                    <p class="texto-secundario mb-0">Materiais esgotados ou com saldo menor ou igual ao mínimo.</p>
+                </div>
+                <a href="materials.html">Consultar materiais</a>
+            </div>
+            <p class="estado-vazio" id="vazio-reposicao">Nenhum material cadastrado. Cadastre seu primeiro material para começar.</p>
+            <div class="table-responsive" id="tabela-reposicao" role="region" aria-label="Materiais que precisam de reposição; role horizontalmente em telas pequenas" tabindex="0" hidden>
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Materiais com necessidade de reposição, com suas respectivas unidades.</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Material</th>
+                            <th scope="col" class="text-end">Saldo</th>
+                            <th scope="col" class="text-end">Mínimo</th>
+                            <th scope="col">Unidade</th>
+                            <th scope="col">Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-reposicao"></tbody>
+                </table>
+            </div>
         </section>
     </main>
     <footer class="rodape">

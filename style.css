@@ -314,6 +314,58 @@ textarea:focus-visible,
     border-top: 1px solid color-mix(in srgb, var(--cor-texto) 15%, transparent);
 }
 
+.indicador {
+    border-left: 4px solid var(--cor-primaria);
+}
+
+.valor-indicador {
+    margin: 0.5rem 0;
+    color: var(--cor-primaria);
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.indicador-alerta {
+    border-left-color: var(--cor-alerta);
+}
+
+.indicador-alerta .valor-indicador {
+    color: var(--cor-alerta);
+}
+
+.indicador-erro {
+    border-left-color: var(--cor-erro);
+}
+
+.indicador-erro .valor-indicador {
+    color: var(--cor-erro);
+}
+
+.slide-recurso {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 245px;
+    padding: 2rem;
+    background-color: var(--cor-fundo);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: 0.75rem;
+}
+
+.slide-recurso p:last-child {
+    max-width: 760px;
+    margin-bottom: 0;
+}
+
+.controles-carrossel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
 .rodape-conteudo {
     display: flex;
     justify-content: space-between;
