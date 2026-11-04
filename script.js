@@ -15,11 +15,19 @@ const categorias = {
     "consumo": "Materiais de consumo",
     "outros": "Outros"
 };
+// As chaves são mantidas iguais às do armazenamento anterior.
 const unidades = { "un": "un", "kg": "kg", "m": "m", "l": "L" };
+// dados reúne materiais e movimentações; só é atualizado após salvar com sucesso.
 let dados = null;
 let armazenamentoDisponivel = false;
 let materialEmEdicao = null;
 
+// O mesmo script atende duas páginas. Um formulário ausente terá valor null.
+const formularioMaterial = document.getElementById("formulario-material");
+const formularioMovimentacao = document.getElementById("formulario-movimentacao");
+const campoPesquisa = document.getElementById("pesquisa-material");
+
+// Procura um material pelo identificador; retorna null quando ele não existe.
 function localizarMaterial(identificador, materiais) {
     for (let indice = 0; indice < materiais.length; indice++) {
         if (materiais[indice].id === identificador) {
@@ -30,6 +38,7 @@ function localizarMaterial(identificador, materiais) {
     return null;
 }
 
+// Verifica se o histórico impede a troca da unidade do material.
 function possuiMovimentacoes(identificador, movimentacoes) {
     for (let indice = 0; indice < movimentacoes.length; indice++) {
         if (movimentacoes[indice].materialId === identificador) {
@@ -42,21 +51,21 @@ function possuiMovimentacoes(identificador, movimentacoes) {
 
 // Recebe o ID e o histórico; soma entradas e desconta saídas, devolvendo milésimos.
 function calcularSaldo(identificador, movimentacoes) {
-    let saldoMil = 0;
+    let saldoEmMilesimos = 0;
 
     for (let indice = 0; indice < movimentacoes.length; indice++) {
         const movimentacao = movimentacoes[indice];
 
         if (movimentacao.materialId === identificador) {
             if (movimentacao.tipo === "entrada") {
-                saldoMil += movimentacao.quantidadeMil;
+                saldoEmMilesimos += movimentacao.quantidadeMil;
             } else {
-                saldoMil -= movimentacao.quantidadeMil;
+                saldoEmMilesimos -= movimentacao.quantidadeMil;
             }
         }
     }
 
-    return saldoMil;
+    return saldoEmMilesimos;
 }
 
 // Recebe o JSON lido e verifica o formato básico, sem recalcular todo o histórico.
@@ -92,6 +101,7 @@ function validarDados(conteudo) {
     }
 }
 
+// Mostra um aviso geral. O tipo escolhe a cor de sucesso ou de erro.
 function mostrarMensagem(texto, tipo) {
     const mensagem = document.getElementById("mensagem-sistema");
 
@@ -102,20 +112,12 @@ function mostrarMensagem(texto, tipo) {
     }
 }
 
+// Esconde o aviso da operação anterior ao iniciar uma nova tentativa.
 function ocultarMensagem() {
     const mensagem = document.getElementById("mensagem-sistema");
 
     if (mensagem) {
         mensagem.hidden = true;
-    }
-}
-
-function bloquearFormularios() {
-    armazenamentoDisponivel = false;
-    const campos = document.querySelectorAll("form fieldset");
-
-    for (let indice = 0; indice < campos.length; indice++) {
-        campos[indice].disabled = true;
     }
 }
 
@@ -135,7 +137,11 @@ function carregarDados() {
         armazenamentoDisponivel = true;
     } catch (erro) {
         dados = null;
-        bloquearFormularios();
+        armazenamentoDisponivel = false;
+        const gruposDeCampos = document.querySelectorAll("form fieldset");
+        for (let indice = 0; indice < gruposDeCampos.length; indice++) {
+            gruposDeCampos[indice].disabled = true;
+        }
         mostrarMensagem("Não foi possível ler os dados deste navegador. Os registros existentes não foram apagados. Verifique o armazenamento e recarregue a página.", "erro");
         console.error("Falha ao ler o armazenamento:", erro.name);
     }
@@ -169,10 +175,12 @@ function converterParaMilesimos(valor, unidade, permitirZero) {
         throw new Error("Selecione uma unidade de medida válida.");
     }
 
+    // Esta expressão aceita apenas algarismos: unidades não podem ter frações.
     if (unidade === "un" && !/^\d+$/.test(texto)) {
         throw new Error("Materiais em unidades aceitam somente números inteiros.");
     }
 
+    // Aceita vírgula ou ponto e até três casas; rejeita negativos e separadores de milhar.
     if (!/^\d+([.,]\d{1,3})?$/.test(texto)) {
         throw new Error("Informe um número sem separador de milhar e com até três casas decimais.");
     }
@@ -184,34 +192,35 @@ function converterParaMilesimos(valor, unidade, permitirZero) {
         parteDecimal = partes[1];
     }
 
-    const quantidadeMil = Number(partes[0] + parteDecimal.padEnd(3, "0"));
+    // Completa a fração: "1,5" vira "1" + "500", sem somar números decimais.
+    const quantidadeEmMilesimos = Number(partes[0] + parteDecimal.padEnd(3, "0"));
 
-    if (!Number.isSafeInteger(quantidadeMil)) {
+    if (!Number.isSafeInteger(quantidadeEmMilesimos)) {
         throw new Error("A quantidade excede o limite numérico permitido.");
     }
 
-    if (quantidadeMil === 0 && !permitirZero) {
+    if (quantidadeEmMilesimos === 0 && !permitirZero) {
         throw new Error("A quantidade deve ser maior que zero.");
     }
 
-    return quantidadeMil;
+    return quantidadeEmMilesimos;
 }
 
 // Recebe milésimos e devolve um texto decimal sem separador de milhar para edição.
-function quantidadeParaCampo(quantidadeMil) {
-    const texto = String(quantidadeMil).padStart(4, "0");
-    const parteInteira = texto.slice(0, -3);
-    const parteDecimal = texto.slice(-3).replace(/0+$/, "");
-
-    if (parteDecimal === "") {
-        return parteInteira;
+function quantidadeParaCampo(quantidadeEmMilesimos) {
+    // Em 1500, o resto 500 é a fração. Retiramos o resto antes de dividir.
+    const resto = quantidadeEmMilesimos % 1000;
+    const parteInteira = (quantidadeEmMilesimos - resto) / 1000;
+    if (resto === 0) {
+        return String(parteInteira);
     }
-
+    const parteDecimal = String(resto).padStart(3, "0").replace(/0+$/, "");
     return parteInteira + "," + parteDecimal;
 }
 
-function formatarQuantidade(quantidadeMil) {
-    const partes = quantidadeParaCampo(quantidadeMil).split(",");
+// Acrescenta os separadores brasileiros somente para mostrar a quantidade na tela.
+function formatarQuantidade(quantidadeEmMilesimos) {
+    const partes = quantidadeParaCampo(quantidadeEmMilesimos).split(",");
     let texto = Number(partes[0]).toLocaleString("pt-BR");
 
     if (partes.length === 2) {
@@ -221,16 +230,18 @@ function formatarQuantidade(quantidadeMil) {
     return texto;
 }
 
-function obterSituacao(saldoMil, estoqueMinimoMil) {
-    if (saldoMil === 0) {
+// Verifica primeiro o saldo zero para não confundir esgotado com estoque baixo.
+function obterSituacao(saldoEmMilesimos, estoqueMinimoEmMilesimos) {
+    if (saldoEmMilesimos === 0) {
         return { texto: "Esgotado", classe: "situacao-esgotado" };
-    } else if (saldoMil <= estoqueMinimoMil) {
+    } else if (saldoEmMilesimos <= estoqueMinimoEmMilesimos) {
         return { texto: "Estoque baixo", classe: "situacao-baixo" };
     } else {
         return { texto: "Disponível", classe: "situacao-disponivel" };
     }
 }
 
+// Usa o maior identificador existente mais um, preservando os registros antigos.
 function gerarIdentificador(registros) {
     let maiorIdentificador = 0;
 
@@ -249,6 +260,7 @@ function gerarIdentificador(registros) {
 
 // Elementos e mensagens dos formulários
 
+// Cria uma célula de tabela. textContent mostra o texto sem executar HTML digitado.
 function criarCelula(linha, texto, classe) {
     const celula = document.createElement("td");
     celula.textContent = texto;
@@ -261,8 +273,9 @@ function criarCelula(linha, texto, classe) {
     return celula;
 }
 
-function criarSituacao(linha, saldoMil, estoqueMinimoMil) {
-    const situacao = obterSituacao(saldoMil, estoqueMinimoMil);
+// Mostra a situação com palavras e cor, facilitando a identificação do estoque.
+function criarSituacao(linha, saldoEmMilesimos, estoqueMinimoEmMilesimos) {
+    const situacao = obterSituacao(saldoEmMilesimos, estoqueMinimoEmMilesimos);
     const celula = criarCelula(linha, "");
     const etiqueta = document.createElement("span");
     etiqueta.className = "situacao " + situacao.classe;
@@ -270,6 +283,7 @@ function criarSituacao(linha, saldoMil, estoqueMinimoMil) {
     celula.appendChild(etiqueta);
 }
 
+// Remove o aviso anterior e a marcação de campos inválidos.
 function limparErroFormulario(formulario, identificadorMensagem) {
     const mensagem = document.getElementById(identificadorMensagem);
     mensagem.hidden = true;
@@ -282,6 +296,7 @@ function limparErroFormulario(formulario, identificadorMensagem) {
     }
 }
 
+// Mostra o motivo do erro e, quando informado, leva o foco ao campo.
 function informarErroFormulario(identificadorMensagem, texto, campo) {
     const mensagem = document.getElementById(identificadorMensagem);
     mensagem.textContent = texto;
@@ -294,150 +309,130 @@ function informarErroFormulario(identificadorMensagem, texto, campo) {
     }
 }
 
+// Limpa avisos anteriores e verifica os campos obrigatórios dos dois formulários.
+function validarFormulario(formulario, identificadorMensagem) {
+    limparErroFormulario(formulario, identificadorMensagem);
+    ocultarMensagem();
+    if (!dados || !armazenamentoDisponivel) {
+        mostrarMensagem("Recarregue a página para verificar o armazenamento antes de salvar.", "erro");
+        return false;
+    }
+    const campos = formulario.querySelectorAll("[required]");
+    for (let indice = 0; indice < campos.length; indice++) {
+        const campo = campos[indice];
+        // Campos bloqueados na edição não precisam ser preenchidos novamente.
+        if (!campo.disabled && campo.value.trim() === "") {
+            informarErroFormulario(identificadorMensagem, "Preencha todos os campos obrigatórios.", campo);
+            return false;
+        }
+    }
+    return true;
+}
+
 // Materiais: cadastro, pesquisa e edição
 
 // Recebe os campos do cadastro e o ID em edição; devolve o material validado.
 function prepararMaterial(cadastro, identificador) {
-    const codigo = cadastro.codigo;
-    const nome = cadastro.nome;
-    const categoria = cadastro.categoria;
-    const unidade = cadastro.unidade;
-    const codigoNormalizado = codigo.trim().toLocaleUpperCase("pt-BR");
-    const nomeNormalizado = nome.trim();
-
-    if (codigoNormalizado === "" || codigoNormalizado.length > 40) {
+    const codigo = cadastro.codigo.trim().toLocaleUpperCase("pt-BR");
+    const nome = cadastro.nome.trim();
+    if (codigo === "" || codigo.length > 40) {
         throw new Error("Informe o código do material, com até 40 caracteres.");
     }
-
-    if (nomeNormalizado === "" || nomeNormalizado.length > 120) {
+    if (nome === "" || nome.length > 120) {
         throw new Error("Informe o nome do material, com até 120 caracteres.");
     }
-
-    if (!Object.hasOwn(categorias, categoria)) {
-        throw new Error("Selecione uma categoria válida.");
+    if (!Object.hasOwn(categorias, cadastro.categoria) || !Object.hasOwn(unidades, cadastro.unidade)) {
+        throw new Error("Selecione uma categoria e uma unidade válidas.");
     }
-
-    if (!Object.hasOwn(unidades, unidade)) {
-        throw new Error("Selecione uma unidade de medida válida.");
-    }
-
+    // Na edição, o próprio material pode continuar usando seu código.
     for (let indice = 0; indice < dados.materiais.length; indice++) {
         const material = dados.materiais[indice];
-
-        if (material.id !== identificador &&
-            material.codigo.trim().toLocaleUpperCase("pt-BR") === codigoNormalizado) {
+        if (material.id !== identificador && material.codigo.trim().toLocaleUpperCase("pt-BR") === codigo) {
             throw new Error("Já existe um material com esse código.");
         }
     }
-
     const materialAnterior = localizarMaterial(identificador, dados.materiais);
-
-    if (materialAnterior && materialAnterior.unidade !== unidade &&
+    if (materialAnterior && materialAnterior.unidade !== cadastro.unidade &&
         possuiMovimentacoes(identificador, dados.movimentacoes)) {
         throw new Error("A unidade não pode mudar porque este material já possui movimentações.");
     }
-
-    let identificadorMaterial = identificador;
-
-    if (identificadorMaterial === null) {
-        identificadorMaterial = gerarIdentificador(dados.materiais);
+    if (identificador === null) {
+        identificador = gerarIdentificador(dados.materiais);
     }
-
     return {
-        id: identificadorMaterial,
-        codigo: codigoNormalizado,
-        nome: nomeNormalizado,
-        categoria: categoria,
-        unidade: unidade,
-        estoqueMinimoMil: converterParaMilesimos(cadastro.minimo, unidade, true)
+        id: identificador,
+        codigo: codigo,
+        nome: nome,
+        categoria: cadastro.categoria,
+        unidade: cadastro.unidade,
+        estoqueMinimoMil: converterParaMilesimos(cadastro.minimo, cadastro.unidade, true)
     };
 }
 
+// Volta ao modo de cadastro e libera os campos bloqueados durante a edição.
 function limparFormularioMaterial() {
-    const formulario = document.getElementById("formulario-material");
-
-    if (!formulario) {
-        return;
-    }
-
-    formulario.reset();
+    formularioMaterial.reset();
     materialEmEdicao = null;
-    document.getElementById("unidade-material").disabled = false;
-    document.getElementById("inicial-material").disabled = false;
+    // elements acessa os campos pelo atributo name definido no HTML.
+    const campos = formularioMaterial.elements;
+    campos.unidade.disabled = false;
+    campos.quantidadeInicial.disabled = false;
     document.getElementById("titulo-cadastro").textContent = "Cadastrar material";
     document.getElementById("salvar-material").textContent = "Cadastrar material";
     document.getElementById("cancelar-edicao").hidden = true;
-    limparErroFormulario(formulario, "erro-material");
+    limparErroFormulario(formularioMaterial, "erro-material");
 }
 
+// Preenche o formulário com o material escolhido, preservando seu histórico.
 function iniciarEdicaoMaterial(identificador) {
     if (!dados || !armazenamentoDisponivel) {
         return;
     }
-
     const material = localizarMaterial(identificador, dados.materiais);
-
     if (!material) {
         return;
     }
-
     limparFormularioMaterial();
     materialEmEdicao = identificador;
-    document.getElementById("inicial-material").disabled = true;
-    document.getElementById("codigo-material").value = material.codigo;
-    document.getElementById("nome-material").value = material.nome;
-    document.getElementById("categoria-material").value = material.categoria;
-    document.getElementById("unidade-material").value = material.unidade;
-    document.getElementById("unidade-material").disabled = possuiMovimentacoes(identificador, dados.movimentacoes);
-    document.getElementById("minimo-material").value = quantidadeParaCampo(material.estoqueMinimoMil);
+    const campos = formularioMaterial.elements;
+    campos.codigo.value = material.codigo;
+    campos.nome.value = material.nome;
+    campos.categoria.value = material.categoria;
+    campos.unidade.value = material.unidade;
+    campos.unidade.disabled = possuiMovimentacoes(identificador, dados.movimentacoes);
+    campos.estoqueMinimo.value = quantidadeParaCampo(material.estoqueMinimoMil);
+    // O saldo não é editado aqui: somente entradas e saídas o alteram.
+    campos.quantidadeInicial.disabled = true;
     document.getElementById("titulo-cadastro").textContent = "Editar material";
     document.getElementById("salvar-material").textContent = "Salvar alterações";
     document.getElementById("cancelar-edicao").hidden = false;
-    document.getElementById("codigo-material").focus();
+    campos.codigo.focus();
 }
 
 // Recebe o envio do formulário, valida os campos e confirma somente após salvar.
 function cadastrarMaterial(evento) {
-    evento.preventDefault();
-    const formulario = evento.currentTarget;
-    limparErroFormulario(formulario, "erro-material");
-    ocultarMensagem();
-
-    if (!dados || !armazenamentoDisponivel) {
-        mostrarMensagem("Recarregue a página para verificar o armazenamento antes de salvar.", "erro");
+    evento.preventDefault(); // Evita que o navegador recarregue a página ao enviar.
+    if (!validarFormulario(formularioMaterial, "erro-material")) {
         return;
     }
-
-    const campos = formulario.querySelectorAll("input, select");
-
-    for (let indice = 0; indice < campos.length; indice++) {
-        if (!campos[indice].disabled && campos[indice].value.trim() === "") {
-            informarErroFormulario("erro-material", "Preencha todos os campos obrigatórios.", campos[indice]);
-            return;
-        }
-    }
-
+    const campos = formularioMaterial.elements;
     try {
         const cadastro = {
-            codigo: document.getElementById("codigo-material").value,
-            nome: document.getElementById("nome-material").value,
-            categoria: document.getElementById("categoria-material").value,
-            unidade: document.getElementById("unidade-material").value,
-            minimo: document.getElementById("minimo-material").value
+            codigo: campos.codigo.value,
+            nome: campos.nome.value,
+            categoria: campos.categoria.value,
+            unidade: campos.unidade.value,
+            minimo: campos.estoqueMinimo.value
         };
         const material = prepararMaterial(cadastro, materialEmEdicao);
-        let quantidadeInicialMil = 0;
-
+        let quantidadeInicialEmMilesimos = 0;
         if (materialEmEdicao === null) {
-            quantidadeInicialMil = converterParaMilesimos(
-                document.getElementById("inicial-material").value, material.unidade, true
-            );
+            quantidadeInicialEmMilesimos = converterParaMilesimos(campos.quantidadeInicial.value, material.unidade, true);
         }
-
-        if (salvarMaterial(material, quantidadeInicialMil)) {
+        if (salvarMaterial(material, quantidadeInicialEmMilesimos)) {
             limparFormularioMaterial();
-            renderizarMateriais();
-            renderizarVisaoGeral();
+            exibirMateriais();
+            atualizarIndicadores();
             mostrarMensagem("Material salvo. O saldo e o histórico estão atualizados.", "sucesso");
         }
     } catch (erro) {
@@ -446,19 +441,21 @@ function cadastrarMaterial(evento) {
 }
 
 // Recebe o material validado e a quantidade inicial; salva cadastro e entrada juntos.
-function salvarMaterial(material, quantidadeInicialMil) {
+function salvarMaterial(material, quantidadeInicialEmMilesimos) {
+    // slice cria cópias: uma falha ao salvar não deve mudar os dados em memória.
     const novosMateriais = dados.materiais.slice();
     const novasMovimentacoes = dados.movimentacoes.slice();
 
     if (materialEmEdicao === null) {
         novosMateriais.push(material);
 
-        if (quantidadeInicialMil > 0) {
+        // A entrada inicial é criada somente no cadastro, nunca durante a edição.
+        if (quantidadeInicialEmMilesimos > 0) {
             novasMovimentacoes.push({
                 id: gerarIdentificador(novasMovimentacoes),
                 materialId: material.id,
                 tipo: "entrada",
-                quantidadeMil: quantidadeInicialMil,
+                quantidadeMil: quantidadeInicialEmMilesimos,
                 unidade: material.unidade,
                 data: new Date().toISOString(),
                 observacao: "Estoque inicial"
@@ -476,7 +473,7 @@ function salvarMaterial(material, quantidadeInicialMil) {
 }
 
 // Lê a pesquisa e os dados e monta a tabela usando textos seguros.
-function renderizarMateriais() {
+function exibirMateriais() {
     const lista = document.getElementById("lista-materiais");
 
     if (!lista) {
@@ -496,7 +493,7 @@ function renderizarMateriais() {
         return;
     }
 
-    const pesquisa = document.getElementById("pesquisa-material").value.trim().toLocaleLowerCase("pt-BR");
+    const pesquisa = campoPesquisa.value.trim().toLocaleLowerCase("pt-BR");
     let quantidadeEncontrada = 0;
 
     for (let indice = 0; indice < dados.materiais.length; indice++) {
@@ -508,14 +505,14 @@ function renderizarMateriais() {
         }
 
         const linha = document.createElement("tr");
-        const saldoMil = calcularSaldo(material.id, dados.movimentacoes);
+        const saldoEmMilesimos = calcularSaldo(material.id, dados.movimentacoes);
         criarCelula(linha, material.codigo);
         criarCelula(linha, material.nome);
         criarCelula(linha, categorias[material.categoria]);
         criarCelula(linha, unidades[material.unidade]);
         criarCelula(linha, formatarQuantidade(material.estoqueMinimoMil), "text-end");
-        criarCelula(linha, formatarQuantidade(saldoMil), "text-end");
-        criarSituacao(linha, saldoMil, material.estoqueMinimoMil);
+        criarCelula(linha, formatarQuantidade(saldoEmMilesimos), "text-end");
+        criarSituacao(linha, saldoEmMilesimos, material.estoqueMinimoMil);
         const celulaAcao = criarCelula(linha, "");
         const botao = document.createElement("button");
         botao.type = "button";
@@ -560,14 +557,14 @@ function prepararMovimentacao(identificador, tipo, quantidade, observacao) {
         throw new Error("A observação deve ter até 500 caracteres.");
     }
 
-    const quantidadeMil = converterParaMilesimos(quantidade, material.unidade, false);
-    const saldoMil = calcularSaldo(material.id, dados.movimentacoes);
+    const quantidadeEmMilesimos = converterParaMilesimos(quantidade, material.unidade, false);
+    const saldoEmMilesimos = calcularSaldo(material.id, dados.movimentacoes);
 
-    if (tipo === "saida" && quantidadeMil > saldoMil) {
-        throw new Error("Saída bloqueada. Saldo disponível: " + formatarQuantidade(saldoMil) + " " + unidades[material.unidade] + ".");
+    if (tipo === "saida" && quantidadeEmMilesimos > saldoEmMilesimos) {
+        throw new Error("Saída bloqueada. Saldo disponível: " + formatarQuantidade(saldoEmMilesimos) + " " + unidades[material.unidade] + ".");
     }
 
-    if (tipo === "entrada" && quantidadeMil > Number.MAX_SAFE_INTEGER - saldoMil) {
+    if (tipo === "entrada" && quantidadeEmMilesimos > Number.MAX_SAFE_INTEGER - saldoEmMilesimos) {
         throw new Error("A entrada ultrapassa o limite numérico do saldo.");
     }
 
@@ -575,63 +572,48 @@ function prepararMovimentacao(identificador, tipo, quantidade, observacao) {
         id: gerarIdentificador(dados.movimentacoes),
         materialId: material.id,
         tipo: tipo,
-        quantidadeMil: quantidadeMil,
+        quantidadeMil: quantidadeEmMilesimos,
         unidade: material.unidade,
         data: new Date().toISOString(),
         observacao: observacao.trim()
     };
 }
 
+// Atualiza o saldo e a orientação de quantidade quando o usuário escolhe um material.
 function atualizarSaldoSelecionado() {
-    const seletor = document.getElementById("material-movimentacao");
-
-    if (!seletor || !dados) {
-        return;
-    }
-
-    const material = localizarMaterial(Number(seletor.value), dados.materiais);
+    const campos = formularioMovimentacao.elements;
+    const material = localizarMaterial(Number(campos.material.value), dados.materiais);
     const saldo = document.getElementById("saldo-selecionado");
     const ajuda = document.getElementById("ajuda-quantidade");
-    const campoQuantidade = document.getElementById("quantidade-movimentacao");
-
+    campos.quantidade.inputMode = "decimal";
     if (!material) {
         saldo.textContent = "Selecione um material para consultar o saldo.";
         ajuda.textContent = "Informe uma quantidade maior que zero.";
-        campoQuantidade.inputMode = "decimal";
         return;
     }
-
-    saldo.textContent = "Saldo disponível: " + formatarQuantidade(calcularSaldo(material.id, dados.movimentacoes)) + " " + unidades[material.unidade] + ".";
-
+    const saldoEmMilesimos = calcularSaldo(material.id, dados.movimentacoes);
+    saldo.textContent = "Saldo disponível: " + formatarQuantidade(saldoEmMilesimos) + " " + unidades[material.unidade] + ".";
     if (material.unidade === "un") {
         ajuda.textContent = "Informe uma quantidade inteira de unidades, maior que zero.";
-        campoQuantidade.inputMode = "numeric";
+        campos.quantidade.inputMode = "numeric";
     } else {
         ajuda.textContent = "Quantidade em " + unidades[material.unidade] + ", com até três casas decimais. Use vírgula ou ponto, sem separador de milhar.";
-        campoQuantidade.inputMode = "decimal";
     }
 }
 
+// Preenche as opções do formulário; sem materiais, bloqueia novas operações.
 function preencherMateriaisMovimentacao() {
-    const seletor = document.getElementById("material-movimentacao");
-
-    if (!seletor) {
-        return;
-    }
-
+    const seletor = formularioMovimentacao.elements.material;
     const aviso = document.getElementById("aviso-sem-materiais");
     const campos = document.getElementById("campos-movimentacao");
-
     if (!dados) {
         campos.disabled = true;
         aviso.textContent = "Não foi possível consultar os materiais. Verifique a mensagem acima.";
         aviso.hidden = false;
         return;
     }
-
     campos.disabled = !armazenamentoDisponivel || dados.materiais.length === 0;
     aviso.hidden = dados.materiais.length !== 0;
-
     for (let indice = 0; indice < dados.materiais.length; indice++) {
         const material = dados.materiais[indice];
         const opcao = document.createElement("option");
@@ -644,52 +626,32 @@ function preencherMateriaisMovimentacao() {
 // Recebe o envio do formulário e grava uma operação válida antes de atualizar a tela.
 function registrarMovimentacao(evento) {
     evento.preventDefault();
-    const formulario = evento.currentTarget;
-    limparErroFormulario(formulario, "erro-movimentacao");
-    ocultarMensagem();
-
-    if (!dados || !armazenamentoDisponivel) {
-        mostrarMensagem("Recarregue a página para verificar o armazenamento antes de registrar uma movimentação.", "erro");
+    if (!validarFormulario(formularioMovimentacao, "erro-movimentacao")) {
         return;
     }
-
-    const camposObrigatorios = formulario.querySelectorAll("[required]");
-
-    for (let indice = 0; indice < camposObrigatorios.length; indice++) {
-        if (camposObrigatorios[indice].value.trim() === "") {
-            informarErroFormulario("erro-movimentacao", "Selecione o material, o tipo e informe a quantidade.", camposObrigatorios[indice]);
-            return;
-        }
-    }
-
-    let movimentacao;
-
+    const campos = formularioMovimentacao.elements;
     try {
-        movimentacao = prepararMovimentacao(
-            Number(document.getElementById("material-movimentacao").value),
-            document.getElementById("tipo-movimentacao").value,
-            document.getElementById("quantidade-movimentacao").value,
-            document.getElementById("observacao-movimentacao").value
+        const movimentacao = prepararMovimentacao(
+            Number(campos.material.value), campos.tipo.value,
+            campos.quantidade.value, campos.observacao.value
         );
+        // A cópia preserva os dados atuais caso o salvamento falhe.
+        const novasMovimentacoes = dados.movimentacoes.slice();
+        novasMovimentacoes.push(movimentacao);
+        if (salvarDados({ versao: 1, materiais: dados.materiais, movimentacoes: novasMovimentacoes })) {
+            campos.quantidade.value = "";
+            campos.observacao.value = "";
+            atualizarSaldoSelecionado();
+            exibirMovimentacoes();
+            mostrarMensagem("Movimentação registrada e saldo atualizado.", "sucesso");
+        }
     } catch (erro) {
         informarErroFormulario("erro-movimentacao", erro.message);
-        return;
-    }
-
-    const novasMovimentacoes = dados.movimentacoes.slice();
-    novasMovimentacoes.push(movimentacao);
-
-    if (salvarDados({ versao: 1, materiais: dados.materiais, movimentacoes: novasMovimentacoes })) {
-        document.getElementById("quantidade-movimentacao").value = "";
-        document.getElementById("observacao-movimentacao").value = "";
-        atualizarSaldoSelecionado();
-        renderizarMovimentacoes();
-        mostrarMensagem("Movimentação registrada e saldo atualizado.", "sucesso");
     }
 }
 
 // Mostra o histórico salvo do registro mais recente ao mais antigo.
-function renderizarMovimentacoes() {
+function exibirMovimentacoes() {
     const lista = document.getElementById("lista-movimentacoes");
 
     if (!lista) {
@@ -713,6 +675,7 @@ function renderizarMovimentacoes() {
     tabela.hidden = dados.movimentacoes.length === 0;
     vazio.hidden = dados.movimentacoes.length !== 0;
 
+    // Percorre de trás para frente para mostrar primeiro os registros mais recentes.
     for (let indice = dados.movimentacoes.length - 1; indice >= 0; indice--) {
         const movimentacao = dados.movimentacoes[indice];
         const material = localizarMaterial(movimentacao.materialId, dados.materiais);
@@ -746,92 +709,60 @@ function renderizarMovimentacoes() {
 // Indicadores e alertas de reposição
 
 // Conta materiais por situação, sem somar quantidades de unidades diferentes.
-function resumirEstoque() {
-    const resumo = { total: dados.materiais.length, baixos: 0, esgotados: 0 };
 
-    for (let indice = 0; indice < dados.materiais.length; indice++) {
-        const material = dados.materiais[indice];
-        const saldoMil = calcularSaldo(material.id, dados.movimentacoes);
-
-        if (saldoMil === 0) {
-            resumo.esgotados++;
-        } else if (saldoMil <= material.estoqueMinimoMil) {
-            resumo.baixos++;
-        }
-    }
-
-    return resumo;
-}
-
-function renderizarVisaoGeral() {
+function atualizarIndicadores() {
     const total = document.getElementById("total-materiais");
-
     if (!total) {
-        return;
+        return; // A página de movimentações não possui indicadores.
     }
-
     const baixos = document.getElementById("total-baixos");
     const esgotados = document.getElementById("total-esgotados");
-
     if (!dados) {
         total.textContent = "—";
         baixos.textContent = "—";
         esgotados.textContent = "—";
         return;
     }
-
-    const resumo = resumirEstoque();
-    total.textContent = String(resumo.total);
-    baixos.textContent = String(resumo.baixos);
-    esgotados.textContent = String(resumo.esgotados);
+    let quantidadeBaixos = 0;
+    let quantidadeEsgotados = 0;
+    for (let indice = 0; indice < dados.materiais.length; indice++) {
+        const material = dados.materiais[indice];
+        const saldoEmMilesimos = calcularSaldo(material.id, dados.movimentacoes);
+        if (saldoEmMilesimos === 0) {
+            quantidadeEsgotados++;
+        } else if (saldoEmMilesimos <= material.estoqueMinimoMil) {
+            quantidadeBaixos++;
+        }
+    }
+    total.textContent = String(dados.materiais.length);
+    baixos.textContent = String(quantidadeBaixos);
+    esgotados.textContent = String(quantidadeEsgotados);
 }
 
-// Inicialização compartilhada: cada página utiliza somente os elementos existentes.
-
+// Inicialização: o defer do HTML faz este trecho rodar após a criação da página.
 console.log("StockFlow carregado:", document.title);
 carregarDados();
-renderizarVisaoGeral();
-
-const formularioMaterial = document.getElementById("formulario-material");
 
 if (formularioMaterial) {
     formularioMaterial.addEventListener("submit", cadastrarMaterial);
-    renderizarMateriais();
+    document.getElementById("cancelar-edicao").addEventListener("click", limparFormularioMaterial);
+    campoPesquisa.addEventListener("input", exibirMateriais);
+    exibirMateriais();
+    atualizarIndicadores();
 }
-
-const formularioMovimentacao = document.getElementById("formulario-movimentacao");
 
 if (formularioMovimentacao) {
     formularioMovimentacao.addEventListener("submit", registrarMovimentacao);
+    formularioMovimentacao.elements.material.addEventListener("change", atualizarSaldoSelecionado);
     preencherMateriaisMovimentacao();
-    renderizarMovimentacoes();
+    exibirMovimentacoes();
 }
 
-const botaoCancelar = document.getElementById("cancelar-edicao");
-const campoPesquisa = document.getElementById("pesquisa-material");
-const seletorMaterial = document.getElementById("material-movimentacao");
-
-if (botaoCancelar) {
-    botaoCancelar.addEventListener("click", limparFormularioMaterial);
-}
-
-if (campoPesquisa) {
-    campoPesquisa.addEventListener("input", renderizarMateriais);
-}
-
-if (seletorMaterial) {
-    seletorMaterial.addEventListener("change", atualizarSaldoSelecionado);
-}
-
+// O Bootstrap controla os slides; este evento atualiza somente o texto da posição.
 const carrossel = document.getElementById("carrossel-recursos");
-
 if (carrossel && typeof bootstrap !== "undefined") {
     new bootstrap.Carousel(carrossel, { interval: false, ride: false });
     carrossel.addEventListener("slid.bs.carousel", function (evento) {
-        const status = document.getElementById("status-carrossel");
-
-        if (status) {
-            status.textContent = (evento.to + 1) + " de 3";
-        }
+        document.getElementById("status-carrossel").textContent = (evento.to + 1) + " de 3";
     });
 }

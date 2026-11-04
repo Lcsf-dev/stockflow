@@ -1,3 +1,4 @@
+/* Paleta compartilhada: altere aqui para atualizar as cores do sistema. */
 :root {
     --cor-primaria: #102A43;
     --cor-destaque: #14B87A;
@@ -61,8 +62,9 @@ textarea:focus-visible,
     border-bottom: 4px solid var(--cor-destaque);
 }
 
+/* Cabeçalho compacto, preservando o espaço de navegação no celular. */
 .navbar {
-    min-height: 86px;
+    min-height: 64px;
 }
 
 .marca {
@@ -112,10 +114,6 @@ textarea:focus-visible,
     padding-bottom: 3rem;
 }
 
-.titulo-secao {
-    margin-bottom: 1.75rem;
-}
-
 .painel {
     padding: 2rem;
     background-color: var(--cor-superficie);
@@ -125,21 +123,25 @@ textarea:focus-visible,
 }
 
 .apresentacao {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
     align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-    padding: 2.5rem;
+    padding: 0;
     border-top: 4px solid var(--cor-destaque);
+    overflow: hidden;
 }
 
-.apresentacao > div {
-    max-width: 740px;
+/* Os títulos ficam sobre fundo branco; a fotografia ocupa somente a lateral. */
+.texto-apresentacao {
+    min-width: 0;
+    padding: 1.5rem;
 }
 
-.simbolo-apresentacao {
-    flex-shrink: 0;
-    object-fit: contain;
+.imagem-apresentacao {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    object-position: center 30%;
 }
 
 .identificador {
@@ -162,13 +164,10 @@ textarea:focus-visible,
 }
 
 .btn-primary {
-    --bs-btn-color: var(--cor-superficie);
     --bs-btn-bg: var(--cor-botao);
     --bs-btn-border-color: var(--cor-botao);
-    --bs-btn-hover-color: var(--cor-superficie);
     --bs-btn-hover-bg: var(--cor-primaria);
     --bs-btn-hover-border-color: var(--cor-primaria);
-    --bs-btn-active-color: var(--cor-superficie);
     --bs-btn-active-bg: var(--cor-primaria);
     --bs-btn-active-border-color: var(--cor-primaria);
 }
@@ -176,10 +175,8 @@ textarea:focus-visible,
 .btn-outline-primary {
     --bs-btn-color: var(--cor-primaria);
     --bs-btn-border-color: var(--cor-primaria);
-    --bs-btn-hover-color: var(--cor-superficie);
     --bs-btn-hover-bg: var(--cor-primaria);
     --bs-btn-hover-border-color: var(--cor-primaria);
-    --bs-btn-active-color: var(--cor-superficie);
     --bs-btn-active-bg: var(--cor-primaria);
     --bs-btn-active-border-color: var(--cor-primaria);
 }
@@ -201,12 +198,6 @@ textarea:focus-visible,
     margin-bottom: 2rem;
 }
 
-.numero-secao {
-    margin-bottom: 0.5rem;
-    color: var(--cor-botao);
-    font-size: 1.5rem;
-    font-weight: 700;
-}
 
 /* Mensagens e situações combinam texto com cor. */
 .mensagem {
@@ -342,19 +333,29 @@ textarea:focus-visible,
     color: var(--cor-erro);
 }
 
+/* No computador, imagem e texto ficam lado a lado, sem texto sobre a fotografia. */
 .slide-recurso {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 245px;
-    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     background-color: var(--cor-fundo);
     border-left: 4px solid var(--cor-destaque);
     border-radius: 0.75rem;
+    overflow: hidden;
 }
 
-.slide-recurso p:last-child {
-    max-width: 760px;
+.imagem-recurso {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    object-fit: cover;
+}
+
+.texto-recurso {
+    align-self: center;
+    padding: 1.75rem;
+}
+
+.texto-recurso p:last-child {
     margin-bottom: 0;
 }
 
@@ -389,23 +390,43 @@ textarea:focus-visible,
     transform: translateY(0);
 }
 
+/* Abaixo de 768 px, o formulário ocupa uma coluna e o menu fica recolhido. */
 @media (max-width: 767.98px) {
     .conteudo-principal {
         padding-top: 1.75rem;
         padding-bottom: 2rem;
     }
 
-    .painel,
-    .apresentacao {
+    .painel {
         padding: 1.25rem;
     }
 
     .apresentacao {
-        align-items: flex-start;
+        grid-template-columns: 1fr;
+        padding: 0;
     }
 
-    .simbolo-apresentacao {
-        display: none;
+    .texto-apresentacao {
+        padding: 1.25rem;
+    }
+
+    /* A faixa de foto fica baixa no celular para aproximar o formulário. */
+    .imagem-apresentacao {
+        height: 100px;
+    }
+
+    /* No celular, a imagem fica acima do texto e mantém a proporção original. */
+    .slide-recurso {
+        grid-template-columns: 1fr;
+    }
+
+    .imagem-recurso {
+        height: auto;
+        min-height: 0;
+    }
+
+    .texto-recurso {
+        padding: 1.25rem;
     }
 
     .navbar-collapse {
@@ -420,9 +441,3 @@ textarea:focus-visible,
     }
 }
 
-@media (max-width: 399.98px) {
-    .apresentacao .btn {
-        display: block;
-        margin-top: 0.75rem;
-    }
-}

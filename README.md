@@ -14,7 +14,7 @@ Controle de estoque para indústrias e empresas: organize materiais, acompanhe s
 - Quantidade inicial com entrada automática e estoque mínimo para reposição.
 - Entradas, saídas e histórico com data, hora e observação opcional.
 - Consulta de saldos, bloqueio de saídas superiores ao disponível e indicadores de estoque.
-- Duas páginas responsivas e carrossel de benefícios.
+- Duas páginas responsivas e carrossel com imagens de ambientes industriais.
 
 ## 🛠️ Tecnologias
 
