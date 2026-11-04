@@ -1,7 +1,7 @@
 // Navegação entre as páginas
 
-function destacarPaginaAtual() {
-    const caminhoPagina = window.location.pathname.replace(/\/$/, "");
+function identificarPagina(endereco) {
+    const caminhoPagina = endereco.replace(/\/$/, "");
     const ultimaBarra = caminhoPagina.lastIndexOf("/");
     let paginaAtual = caminhoPagina.substring(ultimaBarra + 1);
 
@@ -11,12 +11,19 @@ function destacarPaginaAtual() {
         paginaAtual += ".html";
     }
 
+    return paginaAtual;
+}
+
+function destacarPaginaAtual() {
+    const paginaAtual = identificarPagina(window.location.pathname);
     const linksMenu = document.querySelectorAll("#menu-principal .nav-link");
 
     for (let indice = 0; indice < linksMenu.length; indice++) {
         const linkMenu = linksMenu[indice];
 
-        if (linkMenu.getAttribute("href") === paginaAtual) {
+        const paginaLink = identificarPagina(linkMenu.getAttribute("href"));
+
+        if (paginaLink === paginaAtual) {
             linkMenu.classList.add("active");
             linkMenu.setAttribute("aria-current", "page");
         } else {
