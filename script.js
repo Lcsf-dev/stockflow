@@ -570,6 +570,203 @@ function renderizarMateriais() {
     }
 }
 
+// Entradas, saídas e histórico
+
+function prepararMovimentacao(identificador, tipo, quantidade, observacao) {
+    const material = localizarMaterial(identificador, dados.materiais);
+
+    if (!material) {
+        throw new Error("Selecione um material cadastrado.");
+    }
+
+    if (tipo !== "entrada" && tipo !== "saida") {
+        throw new Error("Selecione o tipo: entrada ou saída.");
+    }
+
+    if (observacao.trim().length > 500) {
+        throw new Error("A observação deve ter até 500 caracteres.");
+    }
+
+    const quantidadeMil = converterParaMilesimos(quantidade, material.unidade, false);
+    const saldoMil = calcularSaldo(material.id, dados.movimentacoes);
+
+    if (tipo === "saida" && quantidadeMil > saldoMil) {
+        throw new Error("Saída bloqueada. Saldo disponível: " + formatarQuantidade(saldoMil) + " " + unidades[material.unidade] + ".");
+    }
+
+    if (tipo === "entrada" && quantidadeMil > Number.MAX_SAFE_INTEGER - saldoMil) {
+        throw new Error("A entrada ultrapassa o limite numérico do saldo.");
+    }
+
+    return {
+        id: gerarIdentificador(dados.movimentacoes),
+        materialId: material.id,
+        tipo: tipo,
+        quantidadeMil: quantidadeMil,
+        unidade: material.unidade,
+        data: new Date().toISOString(),
+        observacao: observacao.trim()
+    };
+}
+
+function atualizarSaldoSelecionado() {
+    const seletor = document.getElementById("material-movimentacao");
+
+    if (!seletor || !dados) {
+        return;
+    }
+
+    const material = localizarMaterial(Number(seletor.value), dados.materiais);
+    const saldo = document.getElementById("saldo-selecionado");
+    const ajuda = document.getElementById("ajuda-quantidade");
+    const campoQuantidade = document.getElementById("quantidade-movimentacao");
+
+    if (!material) {
+        saldo.textContent = "Selecione um material para consultar o saldo.";
+        ajuda.textContent = "Informe uma quantidade maior que zero.";
+        campoQuantidade.inputMode = "decimal";
+        return;
+    }
+
+    saldo.textContent = "Saldo disponível: " + formatarQuantidade(calcularSaldo(material.id, dados.movimentacoes)) + " " + unidades[material.unidade] + ".";
+
+    if (material.unidade === "un") {
+        ajuda.textContent = "Informe uma quantidade inteira de unidades, maior que zero.";
+        campoQuantidade.inputMode = "numeric";
+    } else {
+        ajuda.textContent = "Quantidade em " + unidades[material.unidade] + ", com até três casas decimais. Use vírgula ou ponto, sem separador de milhar.";
+        campoQuantidade.inputMode = "decimal";
+    }
+}
+
+function preencherMateriaisMovimentacao() {
+    const seletor = document.getElementById("material-movimentacao");
+
+    if (!seletor) {
+        return;
+    }
+
+    const aviso = document.getElementById("aviso-sem-materiais");
+    const campos = document.getElementById("campos-movimentacao");
+
+    if (!dados) {
+        campos.disabled = true;
+        aviso.textContent = "Não foi possível consultar os materiais. Verifique a mensagem acima.";
+        aviso.hidden = false;
+        return;
+    }
+
+    campos.disabled = !armazenamentoDisponivel || dados.materiais.length === 0;
+    aviso.hidden = dados.materiais.length !== 0;
+
+    for (let indice = 0; indice < dados.materiais.length; indice++) {
+        const material = dados.materiais[indice];
+        const opcao = document.createElement("option");
+        opcao.value = String(material.id);
+        opcao.textContent = material.codigo + " — " + material.nome + " (" + unidades[material.unidade] + ")";
+        seletor.appendChild(opcao);
+    }
+}
+
+function registrarMovimentacao(evento) {
+    evento.preventDefault();
+    const formulario = evento.currentTarget;
+    limparErroFormulario(formulario, "erro-movimentacao");
+
+    if (!dados || !armazenamentoDisponivel) {
+        mostrarMensagem("Recarregue a página para verificar o armazenamento antes de registrar uma movimentação.", "erro");
+        return;
+    }
+
+    const camposObrigatorios = formulario.querySelectorAll("[required]");
+
+    for (let indice = 0; indice < camposObrigatorios.length; indice++) {
+        if (camposObrigatorios[indice].value.trim() === "") {
+            informarErroFormulario("erro-movimentacao", "Selecione o material, o tipo e informe a quantidade.", camposObrigatorios[indice]);
+            return;
+        }
+    }
+
+    let movimentacao;
+
+    try {
+        movimentacao = prepararMovimentacao(
+            Number(document.getElementById("material-movimentacao").value),
+            document.getElementById("tipo-movimentacao").value,
+            document.getElementById("quantidade-movimentacao").value,
+            document.getElementById("observacao-movimentacao").value
+        );
+    } catch (erro) {
+        informarErroFormulario("erro-movimentacao", erro.message);
+        return;
+    }
+
+    const novasMovimentacoes = dados.movimentacoes.slice();
+    novasMovimentacoes.push(movimentacao);
+
+    if (salvarDados({ versao: 1, materiais: dados.materiais, movimentacoes: novasMovimentacoes })) {
+        document.getElementById("quantidade-movimentacao").value = "";
+        document.getElementById("observacao-movimentacao").value = "";
+        atualizarSaldoSelecionado();
+        renderizarMovimentacoes();
+        mostrarMensagem("Movimentação registrada e saldo atualizado.", "sucesso");
+    }
+}
+
+function renderizarMovimentacoes() {
+    const lista = document.getElementById("lista-movimentacoes");
+
+    if (!lista) {
+        return;
+    }
+
+    lista.replaceChildren();
+    const vazio = document.getElementById("vazio-movimentacoes");
+    const tabela = document.getElementById("tabela-movimentacoes");
+    const resumo = document.getElementById("resumo-movimentacoes");
+
+    if (!dados) {
+        tabela.hidden = true;
+        vazio.hidden = false;
+        vazio.textContent = "Não foi possível consultar o histórico. Verifique a mensagem acima.";
+        resumo.textContent = "Consulta indisponível.";
+        return;
+    }
+
+    resumo.textContent = dados.movimentacoes.length + " movimentação(ões).";
+    tabela.hidden = dados.movimentacoes.length === 0;
+    vazio.hidden = dados.movimentacoes.length !== 0;
+
+    for (let indice = dados.movimentacoes.length - 1; indice >= 0; indice--) {
+        const movimentacao = dados.movimentacoes[indice];
+        const material = localizarMaterial(movimentacao.materialId, dados.materiais);
+        const linha = document.createElement("tr");
+        criarCelula(linha, material.codigo + " — " + material.nome);
+        let textoTipo = "Entrada";
+
+        if (movimentacao.tipo === "saida") {
+            textoTipo = "Saída";
+        }
+
+        criarCelula(linha, textoTipo);
+        criarCelula(linha, formatarQuantidade(movimentacao.quantidadeMil), "text-end");
+        criarCelula(linha, unidades[movimentacao.unidade]);
+        const celulaData = criarCelula(linha, "");
+        const data = document.createElement("time");
+        data.dateTime = movimentacao.data;
+        data.textContent = new Date(movimentacao.data).toLocaleString("pt-BR");
+        celulaData.appendChild(data);
+        let observacao = "Sem observação";
+
+        if (movimentacao.observacao !== "") {
+            observacao = movimentacao.observacao;
+        }
+
+        criarCelula(linha, observacao);
+        lista.appendChild(linha);
+    }
+}
+
 // Inicialização compartilhada: cada página utiliza somente os elementos existentes.
 
 destacarPaginaAtual();
@@ -582,6 +779,15 @@ if (formularioMaterial) {
     document.getElementById("cancelar-edicao").addEventListener("click", limparFormularioMaterial);
     document.getElementById("pesquisa-material").addEventListener("input", renderizarMateriais);
     renderizarMateriais();
+}
+
+const formularioMovimentacao = document.getElementById("formulario-movimentacao");
+
+if (formularioMovimentacao) {
+    formularioMovimentacao.addEventListener("submit", registrarMovimentacao);
+    document.getElementById("material-movimentacao").addEventListener("change", atualizarSaldoSelecionado);
+    preencherMateriaisMovimentacao();
+    renderizarMovimentacoes();
 }
 
 window.addEventListener("storage", function (evento) {

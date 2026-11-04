@@ -42,9 +42,69 @@
             <h1 id="titulo-pagina">Movimentações</h1>
             <p>Acompanhe cada entrada e saída de materiais.</p>
         </div>
-        <section class="painel" aria-labelledby="titulo-movimentacao">
+        <section class="painel mb-4" aria-labelledby="titulo-movimentacao">
             <h2 class="h4" id="titulo-movimentacao">Registrar movimentação</h2>
-            <p class="mb-0">O formulário e o histórico serão disponibilizados nesta área.</p>
+            <p class="texto-secundario">Data e hora são registradas automaticamente. A observação é opcional.</p>
+            <p class="estado-vazio mb-3" id="aviso-sem-materiais">Cadastre um material para liberar as movimentações. <a href="materials.html">Ir para materiais</a>.</p>
+            <form id="formulario-movimentacao" novalidate>
+                <fieldset id="campos-movimentacao">
+                    <legend class="visually-hidden">Dados da movimentação</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="material-movimentacao">Material</label>
+                            <select class="form-select" id="material-movimentacao" name="material" aria-describedby="saldo-selecionado" required>
+                                <option value="">Selecione o material</option>
+                            </select>
+                            <p class="form-text" id="saldo-selecionado" role="status">Selecione um material para consultar o saldo.</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="tipo-movimentacao">Tipo</label>
+                            <select class="form-select" id="tipo-movimentacao" name="tipo" required>
+                                <option value="">Selecione o tipo</option>
+                                <option value="entrada">Entrada</option>
+                                <option value="saida">Saída</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="quantidade-movimentacao">Quantidade</label>
+                            <input class="form-control" id="quantidade-movimentacao" name="quantidade" type="text" inputmode="decimal" maxlength="24" aria-describedby="ajuda-quantidade" required>
+                            <p class="form-text" id="ajuda-quantidade">Informe uma quantidade maior que zero.</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="observacao-movimentacao">Observação <span class="fw-normal">(opcional)</span></label>
+                            <textarea class="form-control" id="observacao-movimentacao" name="observacao" rows="2" maxlength="500" placeholder="Descreva o motivo ou uma referência da movimentação"></textarea>
+                        </div>
+                    </div>
+                    <p class="mensagem mensagem-erro mt-3" id="erro-movimentacao" role="alert" hidden></p>
+                    <button class="btn btn-primary mt-3" type="submit">Registrar movimentação</button>
+                </fieldset>
+            </form>
+        </section>
+        <section class="painel" aria-labelledby="titulo-historico">
+            <div class="cabecalho-painel">
+                <div>
+                    <h2 class="h4" id="titulo-historico">Histórico de movimentações</h2>
+                    <p class="texto-secundario mb-0">Registros mais recentes primeiro.</p>
+                </div>
+                <p class="small mb-0" id="resumo-movimentacoes" role="status"></p>
+            </div>
+            <p class="estado-vazio" id="vazio-movimentacoes">Nenhuma movimentação registrada.</p>
+            <div class="table-responsive" id="tabela-movimentacoes" role="region" aria-label="Histórico; role horizontalmente em telas pequenas" tabindex="0" hidden>
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Histórico com material, tipo, quantidade, unidade, data e observação.</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Material</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col" class="text-end">Quantidade</th>
+                            <th scope="col">Unidade</th>
+                            <th scope="col">Data e hora</th>
+                            <th scope="col">Observação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-movimentacoes"></tbody>
+                </table>
+            </div>
         </section>
     </main>
     <footer class="rodape">
