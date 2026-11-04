@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StockFlow: acompanhe os materiais e as necessidades de reposição do estoque industrial.">
+    <title>Visão geral | StockFlow</title>
+    <link rel="icon" type="image/png" href="images/symbol-stockflow.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <a class="atalho-conteudo" href="#conteudo">Ir para o conteúdo</a>
+    <header class="cabecalho">
+        <nav class="navbar navbar-expand-md" data-bs-theme="dark" aria-label="Navegação principal">
+            <div class="container">
+                <a class="navbar-brand marca" href="index.html" aria-label="StockFlow: página inicial">
+                    <img src="images/symbol-stockflow.png" alt="" width="44" height="44">
+                    <span>Stock<span class="marca-destaque">Flow</span></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal" aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir ou fechar menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="menu-principal">
+                    <ul class="navbar-nav ms-auto gap-md-2">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Visão geral</a></li>
+                        <li class="nav-item"><a class="nav-link" href="materials.html">Materiais</a></li>
+                        <li class="nav-item"><a class="nav-link" href="movements.html">Movimentações</a></li>
+                        <li class="nav-item"><a class="nav-link" href="about.html">Sobre</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="container conteudo-principal" id="conteudo" tabindex="-1">
+        <div class="mensagem mb-4" id="mensagem-sistema" role="alert" hidden></div>
+        <noscript><p class="mensagem mensagem-erro">Ative o JavaScript para utilizar os formulários e consultar o estoque. O menu em telas pequenas também depende de JavaScript.</p></noscript>
+        <section class="painel apresentacao mb-4" aria-labelledby="titulo-pagina">
+            <div>
+                <p class="identificador">Controle de estoque industrial</p>
+                <h1 id="titulo-pagina">Seu estoque, em movimento.</h1>
+                <p class="slogan">Sua indústria em movimento, seu estoque sob controle.</p>
+                <p class="texto-secundario">Organize os materiais e acompanhe o que entra, o que sai e o que precisa de atenção.</p>
+                <a class="btn btn-primary" href="materials.html">Acessar materiais</a>
+                <a class="btn btn-outline-primary ms-sm-2" href="movements.html">Ver movimentações</a>
+            </div>
+            <img class="simbolo-apresentacao" src="images/symbol-stockflow.png" alt="" width="156" height="156">
+        </section>
+        <section class="row g-4 mb-4" aria-label="Indicadores de materiais">
+            <div class="col-md-4">
+                <article class="painel indicador h-100">
+                    <h2 class="h6">Materiais cadastrados</h2>
+                    <p class="valor-indicador" id="total-materiais">0</p>
+                    <p class="small mb-0">Todos os materiais do cadastro.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="painel indicador indicador-alerta h-100">
+                    <h2 class="h6">Estoque baixo</h2>
+                    <p class="valor-indicador" id="total-baixos">0</p>
+                    <p class="small mb-0">Saldo positivo até o estoque mínimo.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="painel indicador indicador-erro h-100">
+                    <h2 class="h6">Esgotados</h2>
+                    <p class="valor-indicador" id="total-esgotados">0</p>
+                    <p class="small mb-0">Materiais com saldo igual a zero.</p>
+                </article>
+            </div>
+        </section>
+        <section class="painel" aria-labelledby="titulo-acompanhamento">
+            <div class="cabecalho-painel">
+                <div>
+                    <h2 class="h4" id="titulo-acompanhamento">Atenção à reposição</h2>
+                    <p class="texto-secundario mb-0">Materiais esgotados ou com saldo menor ou igual ao mínimo.</p>
+                </div>
+                <a href="materials.html">Consultar materiais</a>
+            </div>
+            <p class="estado-vazio" id="vazio-reposicao">Nenhum material cadastrado. Cadastre seu primeiro material para começar.</p>
+            <div class="table-responsive" id="tabela-reposicao" role="region" aria-label="Materiais que precisam de reposição; role horizontalmente em telas pequenas" tabindex="0" hidden>
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Materiais com necessidade de reposição, com suas respectivas unidades.</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Material</th>
+                            <th scope="col" class="text-end">Saldo</th>
+                            <th scope="col" class="text-end">Mínimo</th>
+                            <th scope="col">Unidade</th>
+                            <th scope="col">Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-reposicao"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer class="rodape">
+        <div class="container rodape-conteudo">
+            <p class="mb-0"><strong>StockFlow</strong> · Controle de Estoque Industrial</p>
+            <p class="small mb-0">Dados neste navegador, sem sincronização entre computadores.</p>
+        </div>
+    </footer>
+</body>
+</html>

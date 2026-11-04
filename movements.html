@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Registre entradas e saídas e consulte o histórico de movimentações no StockFlow.">
+    <title>Movimentações | StockFlow</title>
+    <link rel="icon" type="image/png" href="images/symbol-stockflow.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <a class="atalho-conteudo" href="#conteudo">Ir para o conteúdo</a>
+    <header class="cabecalho">
+        <nav class="navbar navbar-expand-md" data-bs-theme="dark" aria-label="Navegação principal">
+            <div class="container">
+                <a class="navbar-brand marca" href="index.html" aria-label="StockFlow: página inicial">
+                    <img src="images/symbol-stockflow.png" alt="" width="44" height="44">
+                    <span>Stock<span class="marca-destaque">Flow</span></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-principal" aria-controls="menu-principal" aria-expanded="false" aria-label="Abrir ou fechar menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="menu-principal">
+                    <ul class="navbar-nav ms-auto gap-md-2">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Visão geral</a></li>
+                        <li class="nav-item"><a class="nav-link" href="materials.html">Materiais</a></li>
+                        <li class="nav-item"><a class="nav-link" href="movements.html">Movimentações</a></li>
+                        <li class="nav-item"><a class="nav-link" href="about.html">Sobre</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="container conteudo-principal" id="conteudo" tabindex="-1">
+        <div class="mensagem mb-4" id="mensagem-sistema" role="alert" hidden></div>
+        <noscript><p class="mensagem mensagem-erro">Ative o JavaScript para utilizar os formulários e consultar o estoque. O menu em telas pequenas também depende de JavaScript.</p></noscript>
+        <div class="titulo-secao">
+            <p class="identificador">Entradas e saídas</p>
+            <h1 id="titulo-pagina">Movimentações</h1>
+            <p>Acompanhe cada entrada e saída de materiais.</p>
+        </div>
+        <section class="painel mb-4" aria-labelledby="titulo-movimentacao">
+            <h2 class="h4" id="titulo-movimentacao">Registrar movimentação</h2>
+            <p class="texto-secundario">Data e hora são registradas automaticamente. A observação é opcional.</p>
+            <p class="estado-vazio mb-3" id="aviso-sem-materiais">Cadastre um material para liberar as movimentações. <a href="materials.html">Ir para materiais</a>.</p>
+            <form id="formulario-movimentacao" novalidate>
+                <fieldset id="campos-movimentacao">
+                    <legend class="visually-hidden">Dados da movimentação</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="material-movimentacao">Material</label>
+                            <select class="form-select" id="material-movimentacao" name="material" aria-describedby="saldo-selecionado" required>
+                                <option value="">Selecione o material</option>
+                            </select>
+                            <p class="form-text" id="saldo-selecionado" role="status">Selecione um material para consultar o saldo.</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="tipo-movimentacao">Tipo</label>
+                            <select class="form-select" id="tipo-movimentacao" name="tipo" required>
+                                <option value="">Selecione o tipo</option>
+                                <option value="entrada">Entrada</option>
+                                <option value="saida">Saída</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="quantidade-movimentacao">Quantidade</label>
+                            <input class="form-control" id="quantidade-movimentacao" name="quantidade" type="text" inputmode="decimal" maxlength="24" aria-describedby="ajuda-quantidade" required>
+                            <p class="form-text" id="ajuda-quantidade">Informe uma quantidade maior que zero.</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="observacao-movimentacao">Observação <span class="fw-normal">(opcional)</span></label>
+                            <textarea class="form-control" id="observacao-movimentacao" name="observacao" rows="2" maxlength="500" placeholder="Descreva o motivo ou uma referência da movimentação"></textarea>
+                        </div>
+                    </div>
+                    <p class="mensagem mensagem-erro mt-3" id="erro-movimentacao" role="alert" hidden></p>
+                    <button class="btn btn-primary mt-3" type="submit">Registrar movimentação</button>
+                </fieldset>
+            </form>
+        </section>
+        <section class="painel" aria-labelledby="titulo-historico">
+            <div class="cabecalho-painel">
+                <div>
+                    <h2 class="h4" id="titulo-historico">Histórico de movimentações</h2>
+                    <p class="texto-secundario mb-0">Registros mais recentes primeiro.</p>
+                </div>
+                <p class="small mb-0" id="resumo-movimentacoes" role="status"></p>
+            </div>
+            <p class="estado-vazio" id="vazio-movimentacoes">Nenhuma movimentação registrada.</p>
+            <div class="table-responsive" id="tabela-movimentacoes" role="region" aria-label="Histórico; role horizontalmente em telas pequenas" tabindex="0" hidden>
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Histórico com material, tipo, quantidade, unidade, data e observação.</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Material</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col" class="text-end">Quantidade</th>
+                            <th scope="col">Unidade</th>
+                            <th scope="col">Data e hora</th>
+                            <th scope="col">Observação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-movimentacoes"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer class="rodape">
+        <div class="container rodape-conteudo">
+            <p class="mb-0"><strong>StockFlow</strong> · Controle de Estoque Industrial</p>
+            <p class="small mb-0">Dados neste navegador, sem sincronização entre computadores.</p>
+        </div>
+    </footer>
+</body>
+</html>
