@@ -1,12 +1,14 @@
 // Navegação entre as páginas
 
 function destacarPaginaAtual() {
-    const caminhoPagina = window.location.pathname;
+    const caminhoPagina = window.location.pathname.replace(/\/$/, "");
     const ultimaBarra = caminhoPagina.lastIndexOf("/");
     let paginaAtual = caminhoPagina.substring(ultimaBarra + 1);
 
     if (paginaAtual === "") {
         paginaAtual = "index.html";
+    } else if (!paginaAtual.endsWith(".html")) {
+        paginaAtual += ".html";
     }
 
     const linksMenu = document.querySelectorAll("#menu-principal .nav-link");
@@ -156,6 +158,14 @@ function mostrarMensagem(texto, tipo) {
         mensagem.textContent = texto;
         mensagem.className = "mensagem mb-4 mensagem-" + tipo;
         mensagem.hidden = false;
+    }
+}
+
+function ocultarMensagem() {
+    const mensagem = document.getElementById("mensagem-sistema");
+
+    if (mensagem) {
+        mensagem.hidden = true;
     }
 }
 
@@ -449,6 +459,7 @@ function cadastrarMaterial(evento) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
     limparErroFormulario(formulario, "erro-material");
+    ocultarMensagem();
 
     if (!dados || !armazenamentoDisponivel) {
         mostrarMensagem("Recarregue a página para verificar o armazenamento antes de salvar.", "erro");
@@ -672,6 +683,7 @@ function registrarMovimentacao(evento) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
     limparErroFormulario(formulario, "erro-movimentacao");
+    ocultarMensagem();
 
     if (!dados || !armazenamentoDisponivel) {
         mostrarMensagem("Recarregue a página para verificar o armazenamento antes de registrar uma movimentação.", "erro");
