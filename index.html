@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="StockFlow: acompanhe os materiais e as necessidades de reposição do estoque industrial.">
-    <title>Visão geral | StockFlow</title>
+    <title>Estoque | StockFlow</title>
     <link rel="icon" type="image/png" href="images/symbol-stockflow.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="style.css">
@@ -25,10 +25,8 @@
                 </button>
                 <div class="collapse navbar-collapse" id="menu-principal">
                     <ul class="navbar-nav ms-auto gap-md-2">
-                        <li class="nav-item"><a class="nav-link" href="index.html">Visão geral</a></li>
-                        <li class="nav-item"><a class="nav-link" href="materials.html">Materiais</a></li>
+                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">Estoque</a></li>
                         <li class="nav-item"><a class="nav-link" href="movements.html">Movimentações</a></li>
-                        <li class="nav-item"><a class="nav-link" href="about.html">Sobre</a></li>
                     </ul>
                 </div>
             </div>
@@ -43,7 +41,7 @@
                 <h1 id="titulo-pagina">Seu estoque, em movimento.</h1>
                 <p class="slogan">Sua indústria em movimento, seu estoque sob controle.</p>
                 <p class="texto-secundario">Organize os materiais e acompanhe o que entra, o que sai e o que precisa de atenção.</p>
-                <a class="btn btn-primary" href="materials.html">Acessar materiais</a>
+                <a class="btn btn-primary" href="#cadastro">Cadastrar material</a>
                 <a class="btn btn-outline-primary ms-sm-2" href="movements.html">Ver movimentações</a>
             </div>
             <img class="simbolo-apresentacao" src="images/symbol-stockflow.png" alt="" width="156" height="156">
@@ -71,30 +69,119 @@
                 </article>
             </div>
         </section>
-        <section class="painel" aria-labelledby="titulo-acompanhamento">
+        <section class="painel mb-4" id="cadastro" aria-labelledby="titulo-cadastro">
+            <h2 class="h4" id="titulo-cadastro">Cadastrar material</h2>
+            <p class="texto-secundario">Todos os campos são obrigatórios. O saldo inicial é zero e muda somente pelas movimentações.</p>
+            <form id="formulario-material" novalidate>
+                <fieldset id="campos-material">
+                    <legend class="visually-hidden">Dados cadastrais do material</legend>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="codigo-material">Código</label>
+                            <input class="form-control" id="codigo-material" name="codigo" type="text" maxlength="40" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="nome-material">Nome</label>
+                            <input class="form-control" id="nome-material" name="nome" type="text" maxlength="120" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="categoria-material">Categoria</label>
+                            <select class="form-select" id="categoria-material" name="categoria" required>
+                                <option value="">Selecione a categoria</option>
+                                <option value="materia-prima">Matéria-prima</option>
+                                <option value="componentes">Componentes</option>
+                                <option value="embalagens">Embalagens</option>
+                                <option value="consumo">Materiais de consumo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="unidade-material">Unidade de medida</label>
+                            <select class="form-select" id="unidade-material" name="unidade" aria-describedby="ajuda-unidade" required>
+                                <option value="">Selecione a unidade</option>
+                                <option value="un">Unidade (un)</option>
+                                <option value="kg">Quilograma (kg)</option>
+                                <option value="m">Metro (m)</option>
+                                <option value="l">Litro (L)</option>
+                            </select>
+                            <p class="form-text" id="ajuda-unidade">A unidade fica bloqueada após a primeira movimentação.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="minimo-material">Estoque mínimo</label>
+                            <input class="form-control" id="minimo-material" name="estoqueMinimo" type="text" inputmode="decimal" maxlength="24" aria-describedby="ajuda-minimo" required>
+                            <p class="form-text" id="ajuda-minimo">Zero ou maior. Unidades: inteiros. kg, m e L: até três casas decimais.</p>
+                        </div>
+                    </div>
+                    <p class="mensagem mensagem-erro mt-3" id="erro-material" role="alert" hidden></p>
+                    <div class="d-flex gap-2 flex-wrap mt-3">
+                        <button class="btn btn-primary" id="salvar-material" type="submit">Cadastrar material</button>
+                        <button class="btn btn-outline-primary" id="cancelar-edicao" type="button" hidden>Cancelar edição</button>
+                    </div>
+                </fieldset>
+            </form>
+        </section>
+        <section class="painel mb-4" aria-labelledby="titulo-lista">
             <div class="cabecalho-painel">
                 <div>
-                    <h2 class="h4" id="titulo-acompanhamento">Atenção à reposição</h2>
-                    <p class="texto-secundario mb-0">Materiais esgotados ou com saldo menor ou igual ao mínimo.</p>
+                    <h2 class="h4" id="titulo-lista">Materiais cadastrados</h2>
+                    <p class="texto-secundario mb-0" id="resumo-materiais" role="status"></p>
                 </div>
-                <a href="materials.html">Consultar materiais</a>
+                <div class="campo-pesquisa">
+                    <label class="form-label" for="pesquisa-material">Pesquisar por nome ou código</label>
+                    <input class="form-control" id="pesquisa-material" type="search" placeholder="Digite para pesquisar" autocomplete="off">
+                </div>
             </div>
-            <p class="estado-vazio" id="vazio-reposicao">Nenhum material cadastrado. Cadastre seu primeiro material para começar.</p>
-            <div class="table-responsive" id="tabela-reposicao" role="region" aria-label="Materiais que precisam de reposição; role horizontalmente em telas pequenas" tabindex="0" hidden>
+            <p class="estado-vazio" id="vazio-materiais">Nenhum material cadastrado. Utilize o formulário para começar.</p>
+            <div class="table-responsive" id="tabela-materiais" role="region" aria-label="Materiais cadastrados; role horizontalmente em telas pequenas" tabindex="0" hidden>
                 <table class="table align-middle mb-0">
-                    <caption class="visually-hidden">Materiais com necessidade de reposição, com suas respectivas unidades.</caption>
+                    <caption class="visually-hidden">Cadastro de materiais com saldo, estoque mínimo e situação.</caption>
                     <thead>
                         <tr>
                             <th scope="col">Código</th>
                             <th scope="col">Material</th>
-                            <th scope="col" class="text-end">Saldo</th>
-                            <th scope="col" class="text-end">Mínimo</th>
+                            <th scope="col">Categoria</th>
                             <th scope="col">Unidade</th>
+                            <th scope="col" class="text-end">Mínimo</th>
+                            <th scope="col" class="text-end">Saldo</th>
                             <th scope="col">Situação</th>
+                            <th scope="col">Ação</th>
                         </tr>
                     </thead>
-                    <tbody id="lista-reposicao"></tbody>
+                    <tbody id="lista-materiais"></tbody>
                 </table>
+            </div>
+        </section>
+        <section class="painel mb-4" aria-labelledby="titulo-recursos">
+            <img class="logomarca-completa" src="images/logo-stockflow.png" alt="StockFlow — Controle de Estoque Industrial. Sua indústria em movimento, seu estoque sob controle.">
+            <h2 class="h4 mb-3" id="titulo-recursos">Controle em cada etapa</h2>
+            <div class="carousel slide" id="carrossel-recursos" role="region" aria-roledescription="carrossel" aria-label="Recursos do StockFlow">
+                <div class="carousel-inner">
+                    <div class="carousel-item active" role="group" aria-roledescription="slide" aria-label="1 de 3: cadastro">
+                        <div class="slide-recurso">
+                            <p class="identificador">01 · Cadastro</p>
+                            <h3>Um lugar para cada material.</h3>
+                            <p>Organize código, nome, categoria, unidade de medida e estoque mínimo. Pesquise e edite sem perder o histórico.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" role="group" aria-roledescription="slide" aria-label="2 de 3: movimentações">
+                        <div class="slide-recurso">
+                            <p class="identificador">02 · Movimentações</p>
+                            <h3>Saiba o que entra e o que sai.</h3>
+                            <p>Registre quantidades com data e hora automáticas. Saídas acima do saldo são bloqueadas para manter o estoque consistente.</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" role="group" aria-roledescription="slide" aria-label="3 de 3: alertas">
+                        <div class="slide-recurso">
+                            <p class="identificador">03 · Alertas</p>
+                            <h3>Reposição no momento certo.</h3>
+                            <p>Identifique materiais esgotados ou com estoque baixo na tabela de materiais. Cada situação combina texto e cor para facilitar a leitura.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="controles-carrossel">
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-target="#carrossel-recursos" data-bs-slide="prev">Anterior</button>
+                    <p class="small mb-0" id="status-carrossel" aria-live="polite" aria-atomic="true">1 de 3</p>
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-target="#carrossel-recursos" data-bs-slide="next">Próximo</button>
+                </div>
             </div>
         </section>
     </main>

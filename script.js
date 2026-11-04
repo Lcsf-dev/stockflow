@@ -1,40 +1,3 @@
-// Navegação entre as páginas
-
-function identificarPagina(endereco) {
-    const caminhoPagina = endereco.replace(/\/$/, "");
-    const ultimaBarra = caminhoPagina.lastIndexOf("/");
-    let paginaAtual = caminhoPagina.substring(ultimaBarra + 1);
-
-    if (paginaAtual === "") {
-        paginaAtual = "index.html";
-    } else if (!paginaAtual.endsWith(".html")) {
-        paginaAtual += ".html";
-    }
-
-    return paginaAtual;
-}
-
-function destacarPaginaAtual() {
-    const paginaAtual = identificarPagina(window.location.pathname);
-    const linksMenu = document.querySelectorAll("#menu-principal .nav-link");
-
-    for (let indice = 0; indice < linksMenu.length; indice++) {
-        const linkMenu = linksMenu[indice];
-
-        const paginaLink = identificarPagina(linkMenu.getAttribute("href"));
-
-        if (paginaLink === paginaAtual) {
-            linkMenu.classList.add("active");
-            linkMenu.setAttribute("aria-current", "page");
-        } else {
-            linkMenu.classList.remove("active");
-            linkMenu.removeAttribute("aria-current");
-        }
-    }
-
-    console.log("Página carregada no StockFlow:", paginaAtual);
-}
-
 // Dados e armazenamento local
 
 const chaveArmazenamento = "stockflow.dados";
@@ -518,6 +481,7 @@ function cadastrarMaterial(evento) {
     if (salvarDados(novosDados)) {
         limparFormularioMaterial();
         renderizarMateriais();
+        renderizarVisaoGeral();
         mostrarMensagem(textoSucesso, "sucesso");
     }
 }
@@ -789,7 +753,7 @@ function renderizarMovimentacoes() {
 // Indicadores e alertas de reposição
 
 function resumirEstoque() {
-    const resumo = { total: dados.materiais.length, baixos: 0, esgotados: 0, reposicao: [] };
+    const resumo = { total: dados.materiais.length, baixos: 0, esgotados: 0 };
 
     for (let indice = 0; indice < dados.materiais.length; indice++) {
         const material = dados.materiais[indice];
@@ -797,10 +761,8 @@ function resumirEstoque() {
 
         if (saldoMil === 0) {
             resumo.esgotados++;
-            resumo.reposicao.push(material);
         } else if (saldoMil <= material.estoqueMinimoMil) {
             resumo.baixos++;
-            resumo.reposicao.push(material);
         }
     }
 
@@ -816,18 +778,11 @@ function renderizarVisaoGeral() {
 
     const baixos = document.getElementById("total-baixos");
     const esgotados = document.getElementById("total-esgotados");
-    const lista = document.getElementById("lista-reposicao");
-    const vazio = document.getElementById("vazio-reposicao");
-    const tabela = document.getElementById("tabela-reposicao");
-    lista.replaceChildren();
 
     if (!dados) {
         total.textContent = "—";
         baixos.textContent = "—";
         esgotados.textContent = "—";
-        tabela.hidden = true;
-        vazio.hidden = false;
-        vazio.textContent = "Não foi possível consultar o estoque. Verifique a mensagem acima.";
         return;
     }
 
@@ -835,32 +790,11 @@ function renderizarVisaoGeral() {
     total.textContent = String(resumo.total);
     baixos.textContent = String(resumo.baixos);
     esgotados.textContent = String(resumo.esgotados);
-    tabela.hidden = resumo.reposicao.length === 0;
-    vazio.hidden = resumo.reposicao.length !== 0;
-
-    if (resumo.total === 0) {
-        vazio.textContent = "Nenhum material cadastrado. Cadastre seu primeiro material para começar.";
-    } else {
-        vazio.textContent = "Tudo em dia. Nenhum material precisa de reposição.";
-    }
-
-    for (let indice = 0; indice < resumo.reposicao.length; indice++) {
-        const material = resumo.reposicao[indice];
-        const saldoMil = calcularSaldo(material.id, dados.movimentacoes);
-        const linha = document.createElement("tr");
-        criarCelula(linha, material.codigo);
-        criarCelula(linha, material.nome);
-        criarCelula(linha, formatarQuantidade(saldoMil), "text-end");
-        criarCelula(linha, formatarQuantidade(material.estoqueMinimoMil), "text-end");
-        criarCelula(linha, unidades[material.unidade]);
-        criarSituacao(linha, saldoMil, material.estoqueMinimoMil);
-        lista.appendChild(linha);
-    }
 }
 
 // Inicialização compartilhada: cada página utiliza somente os elementos existentes.
 
-destacarPaginaAtual();
+console.log("StockFlow carregado:", document.title);
 carregarDados();
 renderizarVisaoGeral();
 
