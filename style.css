@@ -390,6 +390,34 @@ textarea:focus-visible,
     transform: translateY(0);
 }
 
+/* Os ajustes da apresentação ficam restritos à página Início. */
+.abertura-inicio {
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border-top: 4px solid var(--cor-destaque);
+}
+
+.abertura-inicio h1 {
+    max-width: 850px;
+}
+
+.descricao-inicio {
+    max-width: 760px;
+    margin: 1.25rem 0 1.5rem;
+    font-size: 1.1rem;
+}
+
+.pagina-inicio .imagem-recurso {
+    aspect-ratio: 1672 / 941;
+    min-height: 0;
+    align-self: center;
+}
+
+.pagina-inicio .link-recurso {
+    display: inline-block;
+    margin-top: 1rem;
+    font-weight: 600;
+}
+
 /* Abaixo de 768 px, o formulário ocupa uma coluna e o menu fica recolhido. */
 @media (max-width: 767.98px) {
     .conteudo-principal {

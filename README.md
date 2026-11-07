@@ -18,7 +18,8 @@ O sistema funciona no navegador, sem servidor de aplicação ou banco de dados r
 - **Movimentações:** registro de entradas e saídas com data e hora automáticas e observação opcional.
 - **Histórico:** consulta das movimentações, com os registros mais recentes primeiro.
 - **Indicadores:** quantidade de materiais cadastrados, com estoque baixo e esgotados.
-- **Interface responsiva:** navegação entre Estoque e Movimentações, tabelas com rolagem horizontal em telas pequenas e carrossel de apresentação.
+- **Página inicial:** apresentação do sistema, seus objetivos e recursos, com atalhos para Estoque e Movimentações.
+- **Interface responsiva:** navegação entre Início, Estoque e Movimentações, tabelas com rolagem horizontal em telas pequenas e carrossel de apresentação.
 
 ## 📋 Regras de estoque
 
@@ -56,10 +57,13 @@ As quantidades são armazenadas internamente como inteiros em milésimos. Por ex
 ```text
 stockflow/
 ├── images/          # Logotipos e imagens da aplicação
+├── home.html        # Apresentação do sistema e acesso às páginas
+├── home.js          # Navegação manual do carrossel da página inicial
 ├── index.html       # Cadastro, pesquisa, edição e indicadores de estoque
 ├── movements.html   # Registro e histórico de movimentações
 ├── script.js        # Regras de estoque, interface e armazenamento local
 ├── style.css        # Estilos personalizados
+├── vercel.json      # Define a Home como entrada na Vercel
 └── README.md        # Documentação do projeto
 ```
 
@@ -76,8 +80,10 @@ Não é necessário instalar dependências com npm nem executar uma etapa de com
 
 2. Abra a pasta do projeto no Visual Studio Code.
 3. Instale a extensão **Live Server**, caso ainda não esteja instalada.
-4. Clique com o botão direito em `index.html` e selecione **Open with Live Server**.
-5. Utilize o endereço local aberto pelo navegador para acessar as duas páginas.
+4. Clique com o botão direito em `home.html` e selecione **Open with Live Server**.
+5. Utilize o menu para navegar entre Início, Estoque e Movimentações.
+
+Na Vercel, o endereço principal abre `home.html`. A página de estoque continua disponível em `index.html`.
 
 O JavaScript deve estar habilitado. O Bootstrap é carregado por CDN e depende de conexão com a internet.
 
