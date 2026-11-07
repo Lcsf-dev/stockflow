@@ -58,7 +58,7 @@ As quantidades são armazenadas internamente como inteiros em milésimos. Por ex
 stockflow/
 ├── images/          # Logotipos e imagens da aplicação
 ├── index.html       # Apresentação do sistema e acesso às páginas
-├── home.js          # Navegação manual do carrossel da página inicial
+├── index.js         # Navegação manual do carrossel da página inicial
 ├── stock.html     # Cadastro, pesquisa, edição e indicadores de estoque
 ├── movements.html   # Registro e histórico de movimentações
 ├── script.js        # Regras de estoque, interface e armazenamento local
