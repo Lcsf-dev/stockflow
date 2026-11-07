@@ -59,7 +59,7 @@ stockflow/
 ├── images/          # Logotipos e imagens da aplicação
 ├── index.html       # Apresentação do sistema e acesso às páginas
 ├── home.js          # Navegação manual do carrossel da página inicial
-├── estoque.html     # Cadastro, pesquisa, edição e indicadores de estoque
+├── stock.html     # Cadastro, pesquisa, edição e indicadores de estoque
 ├── movements.html   # Registro e histórico de movimentações
 ├── script.js        # Regras de estoque, interface e armazenamento local
 ├── style.css        # Estilos personalizados
@@ -82,7 +82,7 @@ Não é necessário instalar dependências com npm nem executar uma etapa de com
 4. Clique com o botão direito em `index.html` e selecione **Open with Live Server**.
 5. Utilize o menu para navegar entre Início, Estoque e Movimentações.
 
-O endereço principal abre a página inicial (`index.html`). A página de estoque fica em `estoque.html`.
+O endereço principal abre a página inicial (`index.html`). A página de estoque fica em `stock.html`.
 
 O JavaScript deve estar habilitado. O Bootstrap é carregado por CDN e depende de conexão com a internet.
 
