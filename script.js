@@ -1,4 +1,11 @@
-// Dados e armazenamento local
+/*
+ * STOCKFLOW — GUIA DE LEITURA
+ * Este arquivo controla as páginas Estoque e Movimentações.
+ * Leia as seções numeradas para acompanhar cada responsabilidade.
+ * A seção 9, no final, conecta as funções aos eventos da página.
+ */
+
+// 1. CONFIGURAÇÕES E ELEMENTOS DA PÁGINA
 
 const chaveArmazenamento = "stockflow.dados";
 const categorias = {
@@ -15,17 +22,29 @@ const categorias = {
     "consumo": "Materiais de consumo",
     "outros": "Outros"
 };
-// As chaves são mantidas iguais às do armazenamento anterior.
-const unidades = { "un": "un", "kg": "kg", "m": "m", "l": "L" };
+// Cada chave é o valor salvo; o texto à direita é mostrado na tela.
+const unidades = {
+    "un": "un",
+    "kg": "kg",
+    "m": "m",
+    "l": "L"
+};
+
 // dados reúne materiais e movimentações; só é atualizado após salvar com sucesso.
 let dados = null;
+
+// Impede gravações quando o navegador não permite acessar o armazenamento.
 let armazenamentoDisponivel = false;
+
+// null significa novo cadastro; um número identifica o material em edição.
 let materialEmEdicao = null;
 
 // O mesmo script atende duas páginas. Um formulário ausente terá valor null.
 const formularioMaterial = document.getElementById("formulario-material");
 const formularioMovimentacao = document.getElementById("formulario-movimentacao");
 const campoPesquisa = document.getElementById("pesquisa-material");
+
+// 2. CONSULTA DOS MATERIAIS, CÁLCULO DO SALDO E VALIDAÇÃO DOS DADOS
 
 // Procura um material pelo identificador; retorna null quando ele não existe.
 function localizarMaterial(identificador, materiais) {
@@ -69,19 +88,31 @@ function calcularSaldo(identificador, movimentacoes) {
 }
 
 // Recebe o JSON lido e verifica o formato básico, sem recalcular todo o histórico.
+// Nas condições: || significa "ou", && significa "e" e ! significa "não".
 function validarDados(conteudo) {
-    if (!conteudo || conteudo.versao !== 1 ||
-        !Array.isArray(conteudo.materiais) || !Array.isArray(conteudo.movimentacoes)) {
+    if (
+        !conteudo ||
+        conteudo.versao !== 1 ||
+        !Array.isArray(conteudo.materiais) ||
+        !Array.isArray(conteudo.movimentacoes)
+    ) {
         throw new Error("Formato de armazenamento não reconhecido.");
     }
 
     for (let indice = 0; indice < conteudo.materiais.length; indice++) {
         const material = conteudo.materiais[indice];
 
-        if (!material || !Number.isSafeInteger(material.id) || material.id <= 0 ||
-            typeof material.codigo !== "string" || typeof material.nome !== "string" ||
-            !Object.hasOwn(categorias, material.categoria) || !Object.hasOwn(unidades, material.unidade) ||
-            !Number.isSafeInteger(material.estoqueMinimoMil) || material.estoqueMinimoMil < 0) {
+        if (
+            !material ||
+            !Number.isSafeInteger(material.id) ||
+            material.id <= 0 ||
+            typeof material.codigo !== "string" ||
+            typeof material.nome !== "string" ||
+            !Object.hasOwn(categorias, material.categoria) ||
+            !Object.hasOwn(unidades, material.unidade) ||
+            !Number.isSafeInteger(material.estoqueMinimoMil) ||
+            material.estoqueMinimoMil < 0
+        ) {
             throw new Error("Formato de material não reconhecido.");
         }
     }
@@ -89,17 +120,25 @@ function validarDados(conteudo) {
     for (let indice = 0; indice < conteudo.movimentacoes.length; indice++) {
         const movimentacao = conteudo.movimentacoes[indice];
 
-        if (!movimentacao || !Number.isSafeInteger(movimentacao.id) || movimentacao.id <= 0 ||
+        if (
+            !movimentacao ||
+            !Number.isSafeInteger(movimentacao.id) ||
+            movimentacao.id <= 0 ||
             !localizarMaterial(movimentacao.materialId, conteudo.materiais) ||
             (movimentacao.tipo !== "entrada" && movimentacao.tipo !== "saida") ||
-            !Number.isSafeInteger(movimentacao.quantidadeMil) || movimentacao.quantidadeMil <= 0 ||
+            !Number.isSafeInteger(movimentacao.quantidadeMil) ||
+            movimentacao.quantidadeMil <= 0 ||
             !Object.hasOwn(unidades, movimentacao.unidade) ||
-            typeof movimentacao.observacao !== "string" || typeof movimentacao.data !== "string" ||
-            Number.isNaN(Date.parse(movimentacao.data))) {
+            typeof movimentacao.observacao !== "string" ||
+            typeof movimentacao.data !== "string" ||
+            Number.isNaN(Date.parse(movimentacao.data))
+        ) {
             throw new Error("Formato de movimentação não reconhecido.");
         }
     }
 }
+
+// 3. MENSAGENS E ARMAZENAMENTO NO NAVEGADOR
 
 // Mostra um aviso geral. O tipo escolhe a cor de sucesso ou de erro.
 function mostrarMensagem(texto, tipo) {
@@ -122,6 +161,7 @@ function ocultarMensagem() {
 }
 
 // Lê o armazenamento; se houver falha, preserva os registros e bloqueia gravações.
+// try executa a tentativa; catch trata erros sem interromper toda a página.
 function carregarDados() {
     try {
         const conteudoSalvo = localStorage.getItem(chaveArmazenamento);
@@ -129,6 +169,7 @@ function carregarDados() {
         if (conteudoSalvo === null) {
             dados = { versao: 1, materiais: [], movimentacoes: [] };
         } else {
+            // JSON.parse transforma o texto salvo em um objeto JavaScript.
             const conteudo = JSON.parse(conteudoSalvo);
             validarDados(conteudo);
             dados = conteudo;
@@ -155,6 +196,7 @@ function salvarDados(novosDados) {
     }
 
     try {
+        // O localStorage guarda texto; JSON.stringify converte o objeto para texto.
         const conteudo = JSON.stringify(novosDados);
         localStorage.setItem(chaveArmazenamento, conteudo);
         dados = novosDados;
@@ -166,7 +208,10 @@ function salvarDados(novosDados) {
     }
 }
 
-// Armazenamos quantidades em milésimos: 1,5 kg vira 1500. Na exibição, convertemos de volta.
+// 4. CONVERSÃO DE QUANTIDADES E SITUAÇÃO DO ESTOQUE
+
+// Armazenamos quantidades em milésimos: 1,5 kg vira 1500.
+// Isso evita erros de precisão nos saldos. Na tela, mostramos o valor decimal.
 // Recebe o texto e a unidade, valida as casas decimais e devolve um inteiro seguro.
 function converterParaMilesimos(valor, unidade, permitirZero) {
     const texto = valor.trim();
@@ -211,6 +256,7 @@ function quantidadeParaCampo(quantidadeEmMilesimos) {
     // Em 1500, o resto 500 é a fração. Retiramos o resto antes de dividir.
     const resto = quantidadeEmMilesimos % 1000;
     const parteInteira = (quantidadeEmMilesimos - resto) / 1000;
+
     if (resto === 0) {
         return String(parteInteira);
     }
@@ -258,9 +304,10 @@ function gerarIdentificador(registros) {
     return maiorIdentificador + 1;
 }
 
-// Elementos e mensagens dos formulários
+// 5. CRIAÇÃO DAS CÉLULAS E VALIDAÇÃO DOS FORMULÁRIOS
 
 // Cria uma célula de tabela. textContent mostra o texto sem executar HTML digitado.
+// createElement cria o elemento; appendChild o coloca dentro de outro elemento.
 function criarCelula(linha, texto, classe) {
     const celula = document.createElement("td");
     celula.textContent = texto;
@@ -310,14 +357,17 @@ function informarErroFormulario(identificadorMensagem, texto, campo) {
 }
 
 // Limpa avisos anteriores e verifica os campos obrigatórios dos dois formulários.
+// Retorna true para continuar o envio ou false para interromper a operação.
 function validarFormulario(formulario, identificadorMensagem) {
     limparErroFormulario(formulario, identificadorMensagem);
     ocultarMensagem();
+
     if (!dados || !armazenamentoDisponivel) {
         mostrarMensagem("Recarregue a página para verificar o armazenamento antes de salvar.", "erro");
         return false;
     }
     const campos = formulario.querySelectorAll("[required]");
+
     for (let indice = 0; indice < campos.length; indice++) {
         const campo = campos[indice];
         // Campos bloqueados na edição não precisam ser preenchidos novamente.
@@ -329,12 +379,13 @@ function validarFormulario(formulario, identificadorMensagem) {
     return true;
 }
 
-// Materiais: cadastro, pesquisa e edição
+// 6. MATERIAIS: CADASTRO, EDIÇÃO, PESQUISA E EXIBIÇÃO
 
 // Recebe os campos do cadastro e o ID em edição; devolve o material validado.
 function prepararMaterial(cadastro, identificador) {
     const codigo = cadastro.codigo.trim().toLocaleUpperCase("pt-BR");
     const nome = cadastro.nome.trim();
+
     if (codigo === "" || codigo.length > 40) {
         throw new Error("Informe o código do material, com até 40 caracteres.");
     }
@@ -352,8 +403,11 @@ function prepararMaterial(cadastro, identificador) {
         }
     }
     const materialAnterior = localizarMaterial(identificador, dados.materiais);
-    if (materialAnterior && materialAnterior.unidade !== cadastro.unidade &&
-        possuiMovimentacoes(identificador, dados.movimentacoes)) {
+    if (
+        materialAnterior &&
+        materialAnterior.unidade !== cadastro.unidade &&
+        possuiMovimentacoes(identificador, dados.movimentacoes)
+    ) {
         throw new Error("A unidade não pode mudar porque este material já possui movimentações.");
     }
     if (identificador === null) {
@@ -412,10 +466,12 @@ function iniciarEdicaoMaterial(identificador) {
 // Recebe o envio do formulário, valida os campos e confirma somente após salvar.
 function cadastrarMaterial(evento) {
     evento.preventDefault(); // Evita que o navegador recarregue a página ao enviar.
+
     if (!validarFormulario(formularioMaterial, "erro-material")) {
         return;
     }
     const campos = formularioMaterial.elements;
+
     try {
         const cadastro = {
             codigo: campos.codigo.value,
@@ -426,8 +482,13 @@ function cadastrarMaterial(evento) {
         };
         const material = prepararMaterial(cadastro, materialEmEdicao);
         let quantidadeInicialEmMilesimos = 0;
+
         if (materialEmEdicao === null) {
-            quantidadeInicialEmMilesimos = converterParaMilesimos(campos.quantidadeInicial.value, material.unidade, true);
+            quantidadeInicialEmMilesimos = converterParaMilesimos(
+                campos.quantidadeInicial.value,
+                material.unidade,
+                true
+            );
         }
         if (salvarMaterial(material, quantidadeInicialEmMilesimos)) {
             limparFormularioMaterial();
@@ -539,7 +600,7 @@ function exibirMateriais() {
     }
 }
 
-// Movimentações: entradas, saídas e histórico
+// 7. MOVIMENTAÇÕES: ENTRADAS, SAÍDAS E HISTÓRICO
 
 // Recebe os dados da operação; valida quantidade e saldo e devolve a movimentação.
 function prepararMovimentacao(identificador, tipo, quantidade, observacao) {
@@ -586,6 +647,7 @@ function atualizarSaldoSelecionado() {
     const saldo = document.getElementById("saldo-selecionado");
     const ajuda = document.getElementById("ajuda-quantidade");
     campos.quantidade.inputMode = "decimal";
+
     if (!material) {
         saldo.textContent = "Selecione um material para consultar o saldo.";
         ajuda.textContent = "Informe uma quantidade maior que zero.";
@@ -606,6 +668,7 @@ function preencherMateriaisMovimentacao() {
     const seletor = formularioMovimentacao.elements.material;
     const aviso = document.getElementById("aviso-sem-materiais");
     const campos = document.getElementById("campos-movimentacao");
+
     if (!dados) {
         campos.disabled = true;
         aviso.textContent = "Não foi possível consultar os materiais. Verifique a mensagem acima.";
@@ -626,14 +689,18 @@ function preencherMateriaisMovimentacao() {
 // Recebe o envio do formulário e grava uma operação válida antes de atualizar a tela.
 function registrarMovimentacao(evento) {
     evento.preventDefault();
+
     if (!validarFormulario(formularioMovimentacao, "erro-movimentacao")) {
         return;
     }
     const campos = formularioMovimentacao.elements;
+
     try {
         const movimentacao = prepararMovimentacao(
-            Number(campos.material.value), campos.tipo.value,
-            campos.quantidade.value, campos.observacao.value
+            Number(campos.material.value),
+            campos.tipo.value,
+            campos.quantidade.value,
+            campos.observacao.value
         );
         // A cópia preserva os dados atuais caso o salvamento falhe.
         const novasMovimentacoes = dados.movimentacoes.slice();
@@ -706,17 +773,19 @@ function exibirMovimentacoes() {
     }
 }
 
-// Indicadores e alertas de reposição
+// 8. INDICADORES E ALERTAS DE REPOSIÇÃO
 
 // Conta materiais por situação, sem somar quantidades de unidades diferentes.
 
 function atualizarIndicadores() {
     const total = document.getElementById("total-materiais");
+
     if (!total) {
         return; // A página de movimentações não possui indicadores.
     }
     const baixos = document.getElementById("total-baixos");
     const esgotados = document.getElementById("total-esgotados");
+
     if (!dados) {
         total.textContent = "—";
         baixos.textContent = "—";
@@ -725,6 +794,7 @@ function atualizarIndicadores() {
     }
     let quantidadeBaixos = 0;
     let quantidadeEsgotados = 0;
+
     for (let indice = 0; indice < dados.materiais.length; indice++) {
         const material = dados.materiais[indice];
         const saldoEmMilesimos = calcularSaldo(material.id, dados.movimentacoes);
@@ -739,10 +809,15 @@ function atualizarIndicadores() {
     esgotados.textContent = String(quantidadeEsgotados);
 }
 
-// Inicialização: o defer do HTML faz este trecho rodar após a criação da página.
+// 9. INICIALIZAÇÃO E EVENTOS DA PÁGINA
+
+// O defer no HTML espera a página ser criada antes de executar este arquivo.
+// O console.log permite conferir o carregamento pelo console do navegador.
 console.log("StockFlow carregado:", document.title);
 carregarDados();
 
+// O evento submit é disparado quando o usuário envia o formulário.
+// O evento input é disparado enquanto o usuário digita na pesquisa.
 if (formularioMaterial) {
     formularioMaterial.addEventListener("submit", cadastrarMaterial);
     document.getElementById("cancelar-edicao").addEventListener("click", limparFormularioMaterial);
@@ -751,6 +826,7 @@ if (formularioMaterial) {
     atualizarIndicadores();
 }
 
+// O evento change atualiza o saldo quando outro material é selecionado.
 if (formularioMovimentacao) {
     formularioMovimentacao.addEventListener("submit", registrarMovimentacao);
     formularioMovimentacao.elements.material.addEventListener("change", atualizarSaldoSelecionado);

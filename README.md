@@ -57,13 +57,12 @@ As quantidades são armazenadas internamente como inteiros em milésimos. Por ex
 ```text
 stockflow/
 ├── images/          # Logotipos e imagens da aplicação
-├── home.html        # Apresentação do sistema e acesso às páginas
+├── index.html       # Apresentação do sistema e acesso às páginas
 ├── home.js          # Navegação manual do carrossel da página inicial
-├── index.html       # Cadastro, pesquisa, edição e indicadores de estoque
+├── estoque.html     # Cadastro, pesquisa, edição e indicadores de estoque
 ├── movements.html   # Registro e histórico de movimentações
 ├── script.js        # Regras de estoque, interface e armazenamento local
 ├── style.css        # Estilos personalizados
-├── vercel.json      # Define a Home como entrada na Vercel
 └── README.md        # Documentação do projeto
 ```
 
@@ -80,10 +79,10 @@ Não é necessário instalar dependências com npm nem executar uma etapa de com
 
 2. Abra a pasta do projeto no Visual Studio Code.
 3. Instale a extensão **Live Server**, caso ainda não esteja instalada.
-4. Clique com o botão direito em `home.html` e selecione **Open with Live Server**.
+4. Clique com o botão direito em `index.html` e selecione **Open with Live Server**.
 5. Utilize o menu para navegar entre Início, Estoque e Movimentações.
 
-Na Vercel, o endereço principal abre `home.html`. A página de estoque continua disponível em `index.html`.
+O endereço principal abre a página inicial (`index.html`). A página de estoque fica em `estoque.html`.
 
 O JavaScript deve estar habilitado. O Bootstrap é carregado por CDN e depende de conexão com a internet.
 
