@@ -32,6 +32,11 @@ main {
     flex: 1;
 }
 
+/* Arredondamento leve nos cantos das imagens. */
+img {
+    border-radius: 6px;
+}
+
 h1,
 h2,
 h3 {
